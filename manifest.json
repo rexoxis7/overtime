@@ -2,7 +2,7 @@
   "id": "./",
   "name": "근무기록",
   "short_name": "근무기록",
-  "description": "스테이지랩 야근·특근 기록",
+  "description": "스테이지랩 야근·특근 기록 (v2.4.3)",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
