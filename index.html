@@ -1,0 +1,1759 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>근무기록</title>
+<meta name="theme-color" content="#1D1D1F">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="근무기록">
+<link rel="apple-touch-icon" id="pwa-icon-link" href="">
+<link rel="manifest" id="pwa-manifest-link" href="">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+<script>
+// ===== 로드 즉시: 캐시된 로고·색으로 PWA 아이콘/스플래시 설정 (로그인 전에도 적용) =====
+(function(){
+  try {
+    var logo = localStorage.getItem('ot2_logo');
+    var splash = localStorage.getItem('ot2_splash') || '#1D1D1F';
+    var iconUrl = logo;
+    if (!iconUrl) {
+      var cv = document.createElement('canvas'); cv.width = cv.height = 512;
+      var x = cv.getContext('2d'); var r = 110;
+      x.beginPath(); x.moveTo(r,0); x.lineTo(512-r,0); x.quadraticCurveTo(512,0,512,r); x.lineTo(512,512-r); x.quadraticCurveTo(512,512,512-r,512); x.lineTo(r,512); x.quadraticCurveTo(0,512,0,512-r); x.lineTo(0,r); x.quadraticCurveTo(0,0,r,0); x.closePath();
+      var n = parseInt(splash.replace('#',''),16);
+      var dk = function(c,a){ return Math.max(0,Math.min(255,c+a)); };
+      var dark = '#'+[dk(n>>16,-40),dk((n>>8)&255,-40),dk(n&255,-40)].map(function(v){return v.toString(16).padStart(2,'0');}).join('');
+      x.fillStyle = splash; x.fill();
+      x.fillStyle = 'rgba(255,255,255,0.96)'; x.font = '800 120px Pretendard,-apple-system,sans-serif'; x.textAlign='center'; x.textBaseline='middle';
+      x.fillText('근무', 256, 200); x.fillText('기록', 256, 330);
+      iconUrl = cv.toDataURL('image/png');
+    }
+    var ati = document.getElementById('pwa-icon-link'); if (ati) ati.href = iconUrl;
+    var tc = document.querySelector('meta[name="theme-color"]'); if (tc) tc.content = splash;
+    var manifest = {name: localStorage.getItem('ot2_appname') || '근무기록', short_name: localStorage.getItem('ot2_appname') || '근무기록', start_url:'./', display:'standalone', background_color:splash, theme_color:splash, orientation:'portrait-primary', icons:[{src:iconUrl,sizes:'192x192',type:'image/png'},{src:iconUrl,sizes:'512x512',type:'image/png'}]};
+    var ml = document.getElementById('pwa-manifest-link'); if (ml) ml.href = URL.createObjectURL(new Blob([JSON.stringify(manifest)],{type:'application/manifest+json'}));
+    // 개인 화면 모드(다크) 즉시 적용 — 깜빡임 방지
+    var mode = localStorage.getItem('ot2_mode') || 'light';
+    if (mode === 'dark' || (mode === 'auto' && window.matchMedia('(prefers-color-scheme: dark)').matches)) document.documentElement.setAttribute('data-theme','dark');
+    var fs = localStorage.getItem('ot2_fontsize'); if (fs) document.documentElement.style.fontSize = fs;
+  } catch(e) {}
+})();
+</script>
+<style>
+:root {
+  --accent: #1D1D1F;
+  --accent-rgb: 29,29,31;
+  --accent-dark: #000000;
+  --accent-soft: rgba(29,29,31,0.06);
+  --bg: #F5F5F7;
+  --bg-elev: #FFFFFF;
+  --bg-sub: #F5F5F7;
+  --text: #1D1D1F;
+  --text-2: #6E6E73;
+  --text-3: #A1A1A6;
+  --line: #E5E5EA;
+  --ok: #1F7A4D; --ok-soft: #EEF6F1;
+  --warn: #8A5A00; --warn-soft: #FBF5E6;
+  --danger: #B3261E; --danger-soft: #FBEEEC;
+  --night: #4A4A4F; --night-soft: #EFEFF1;
+  --special: #1D1D1F; --special-soft: #EFEFF1;
+  --shadow-sm: 0 1px 2px rgba(0,0,0,0.04);
+  --shadow-md: 0 6px 20px rgba(0,0,0,0.06);
+  --shadow-lg: 0 20px 50px rgba(0,0,0,0.14);
+  --radius: 16px; --radius-sm: 10px;
+  --nav-h: 60px;
+  --safe-b: env(safe-area-inset-bottom, 0px);
+  --safe-t: env(safe-area-inset-top, 0px);
+}
+[data-theme="dark"] {
+  --bg: #000000; --bg-elev: #1C1C1E; --bg-sub: #2C2C2E;
+  --text: #F5F5F7; --text-2: #A1A1A6; --text-3: #6E6E73; --line: #3A3A3C;
+  --accent-soft: rgba(255,255,255,0.08);
+  --ok-soft: rgba(31,122,77,0.18); --warn-soft: rgba(138,90,0,0.18); --danger-soft: rgba(179,38,30,0.18);
+  --night-soft: rgba(255,255,255,0.08); --special-soft: rgba(255,255,255,0.08);
+  --shadow-sm: 0 1px 2px rgba(0,0,0,0.4); --shadow-md: 0 6px 20px rgba(0,0,0,0.5); --shadow-lg: 0 20px 50px rgba(0,0,0,0.6);
+}
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+html { font-size: 16px; }
+body { font-family: Pretendard, -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif; background: var(--bg); color: var(--text); line-height: 1.5; -webkit-font-smoothing: antialiased; overscroll-behavior-y: none; letter-spacing: -0.01em; }
+#app-bg { position: fixed; inset: 0; z-index: 0; background: var(--bg); background-size: cover; background-position: center; }
+body.has-bg #app-bg::after { content:''; position:absolute; inset:0; background: rgba(245,245,247,0.6); }
+[data-theme="dark"] body.has-bg #app-bg::after { background: rgba(0,0,0,0.65); }
+.view { display: none; position: relative; z-index: 1; min-height: 100dvh; }
+.view.active { display: block; }
+button, input, select, textarea { font-family: inherit; font-size: inherit; color: inherit; }
+button { cursor: pointer; border: none; background: none; }
+input, select, textarea { border: 1px solid var(--line); background: var(--bg-elev); border-radius: var(--radius-sm); padding: 12px 14px; width: 100%; outline: none; transition: border-color .15s, box-shadow .15s; }
+input:focus, select:focus, textarea:focus { border-color: var(--text); box-shadow: none; }
+input[type=time], input[type=date] { -webkit-appearance: none; min-height: 48px; font-variant-numeric: tabular-nums; }
+::placeholder { color: var(--text-3); }
+.num { font-variant-numeric: tabular-nums; }
+
+/* ===== 로그인 ===== */
+.login-wrap { min-height: 100dvh; display: flex; align-items: center; justify-content: center; padding: 24px; background: var(--bg); }
+.login-card { width: 100%; max-width: 380px; background: var(--bg-elev); border-radius: 24px; padding: 36px 28px 28px; box-shadow: var(--shadow-md); border: 1px solid var(--line); }
+.login-brand { text-align: center; margin-bottom: 26px; }
+.login-brand img { max-height: 64px; max-width: 200px; object-fit: contain; margin-bottom: 14px; }
+.login-brand .mark { width: 56px; height: 56px; border-radius: 16px; margin: 0 auto 16px; display: flex; align-items: center; justify-content: center; color: #fff; background: var(--accent); }
+.login-brand .mark svg { width: 26px; height: 26px; }
+.login-brand h1 { font-size: 22px; font-weight: 700; letter-spacing: -0.03em; }
+.login-brand p { font-size: 13px; color: var(--text-2); margin-top: 6px; }
+.field { margin-bottom: 14px; }
+.field label { display: block; font-size: 12px; font-weight: 600; color: var(--text-2); margin-bottom: 6px; }
+.field input { font-size: 16px; min-height: 50px; }
+.login-foot { text-align: center; margin-top: 18px; font-size: 12px; color: var(--text-3); }
+.login-help { display: block; text-align: center; margin-top: 14px; font-size: 13px; color: var(--text-2); cursor: pointer; font-weight: 600; }
+.login-rem { text-align: center; margin-bottom: 16px; } .login-rem b { display: block; font-size: 16px; font-weight: 700; } .login-rem a { font-size: 12px; color: var(--text-2); cursor: pointer; font-weight: 600; text-decoration: underline; text-underline-offset: 3px; }
+
+/* ===== 버튼 ===== */
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 12px 18px; border-radius: 12px; font-weight: 600; font-size: 15px; transition: transform .08s, opacity .15s, background .15s; white-space: nowrap; }
+.btn:active { transform: scale(0.98); }
+.btn:disabled { opacity: .45; pointer-events: none; }
+.btn-primary { background: var(--accent); color: #fff; }
+.btn-ghost { background: transparent; color: var(--text); border: 1px solid var(--line); }
+.btn-soft { background: var(--bg-sub); color: var(--text); }
+.btn-danger { background: var(--danger); color: #fff; }
+.btn-danger-soft { background: var(--danger-soft); color: var(--danger); }
+.btn-full { width: 100%; }
+.btn-lg { padding: 15px 20px; font-size: 16px; }
+.btn-sm { padding: 9px 14px; font-size: 13px; border-radius: 10px; }
+.btn-xs { padding: 6px 10px; font-size: 12px; border-radius: 8px; }
+
+/* ===== 앱 틀 ===== */
+.app { max-width: 560px; margin: 0 auto; min-height: 100dvh; display: flex; flex-direction: column; }
+.topbar { position: sticky; top: 0; z-index: 20; display: flex; align-items: center; justify-content: space-between; padding: calc(12px + var(--safe-t)) 18px 12px; background: rgba(245,245,247,0.85); backdrop-filter: saturate(180%) blur(20px); -webkit-backdrop-filter: saturate(180%) blur(20px); border-bottom: 1px solid var(--line); }
+[data-theme="dark"] .topbar { background: rgba(0,0,0,0.75); }
+.topbar-l { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.topbar-logo { height: 28px; max-width: 120px; object-fit: contain; display: none; }
+.topbar-title { font-size: 17px; font-weight: 700; letter-spacing: -0.02em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.topbar-sub { font-size: 12px; color: var(--text-2); }
+.chip { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 6px; font-size: 11px; font-weight: 600; white-space: nowrap; line-height: 1.6; }
+.chip-accent { background: var(--bg-sub); color: var(--text); }
+.chip-night { background: var(--night-soft); color: var(--night); }
+.chip-special { background: var(--special-soft); color: var(--special); }
+.chip-ok { background: var(--ok-soft); color: var(--ok); }
+.chip-warn { background: var(--warn-soft); color: var(--warn); }
+.chip-danger { background: var(--danger-soft); color: var(--danger); }
+.chip-gray { background: var(--bg-sub); color: var(--text-2); }
+.content { flex: 1; padding: 14px 16px calc(var(--nav-h) + var(--safe-b) + 24px); }
+.bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; z-index: 30; display: flex; justify-content: center; padding: 0 0 var(--safe-b); background: rgba(255,255,255,0.9); backdrop-filter: saturate(180%) blur(20px); -webkit-backdrop-filter: saturate(180%) blur(20px); border-top: 1px solid var(--line); }
+[data-theme="dark"] .bottom-nav { background: rgba(28,28,30,0.9); }
+.bottom-nav-inner { display: flex; width: 100%; max-width: 560px; height: var(--nav-h); }
+.nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; color: var(--text-3); font-size: 11px; font-weight: 600; position: relative; transition: color .15s; }
+.nav-item .ico { display: flex; line-height: 1; }
+.nav-item .ico svg { width: 22px; height: 22px; stroke: currentColor; fill: none; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+.nav-item.active { color: var(--text); }
+
+/* ===== 카드 ===== */
+.card { background: var(--bg-elev); border-radius: var(--radius); padding: 18px; box-shadow: var(--shadow-sm); border: 1px solid var(--line); margin-bottom: 14px; }
+.card-title { font-size: 13px; font-weight: 600; color: var(--text-2); margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between; }
+.sec-title { font-size: 12px; font-weight: 600; color: var(--text-3); margin: 20px 4px 8px; }
+.hero { border-radius: 20px; padding: 22px 20px 20px; color: #fff; background: var(--accent); margin-bottom: 16px; position: relative; overflow: hidden; }
+.hero > * { position: relative; }
+.hero-date { font-size: 13px; opacity: .7; font-weight: 500; }
+.hero-title { font-size: 20px; font-weight: 700; letter-spacing: -0.02em; margin-top: 2px; }
+.hero-clock { font-size: 64px; font-weight: 600; letter-spacing: -0.04em; line-height: 1; text-align: center; margin: 22px 0 4px; font-variant-numeric: tabular-nums; }
+.hero-clock-sub { text-align: center; font-size: 12px; opacity: .65; font-weight: 500; margin-bottom: 18px; }
+.hero-row { display: flex; gap: 8px; margin-top: 14px; }
+.hero-box { flex: 1; border: 1px solid rgba(255,255,255,0.18); border-radius: 12px; padding: 10px 12px; }
+.hero-box .k { font-size: 11px; opacity: .7; font-weight: 500; }
+.hero-box .v { font-size: 18px; font-weight: 600; margin-top: 2px; font-variant-numeric: tabular-nums; }
+.btn-hero { width: 100%; padding: 16px; border-radius: 12px; background: #fff; color: var(--accent); font-size: 16px; font-weight: 700; }
+.btn-hero.special { color: var(--accent); }
+.hero-preview { margin-top: 10px; border: 1px solid rgba(255,255,255,0.18); border-radius: 12px; padding: 10px 14px; display: flex; justify-content: space-between; align-items: center; font-size: 13px; font-weight: 500; }
+.hero-preview b { font-size: 18px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.hero-link { display: inline-block; text-align: center; color: rgba(255,255,255,0.72); font-size: 12px; font-weight: 600; cursor: pointer; }
+.hero-input-row { display: flex; gap: 8px; align-items: center; }
+.hero-input-row input { background: #fff; color: var(--text); border: none; font-weight: 600; font-size: 20px; text-align: center; padding: 10px; border-radius: 10px; }
+.hero-done { border: 1px solid rgba(255,255,255,0.18); border-radius: 12px; padding: 14px; }
+.hero-done .row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; font-size: 13px; }
+.hero-done .row:last-child { margin-bottom: 0; }
+.hero-done .big { font-size: 22px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.hero .btn-xs { background: rgba(255,255,255,0.14); color: #fff; }
+
+.stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 14px; }
+.stat { background: var(--bg-elev); border: 1px solid var(--line); border-radius: 14px; padding: 14px 12px; text-align: center; }
+.stat .k { font-size: 12px; color: var(--text-2); font-weight: 500; }
+.stat .v { font-size: 19px; font-weight: 600; margin-top: 4px; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+.stat .s { font-size: 11px; color: var(--text-3); margin-top: 2px; }
+
+/* ===== 리스트 ===== */
+.list { background: var(--bg-elev); border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; margin-bottom: 14px; }
+.row { display: flex; align-items: center; gap: 12px; padding: 13px 16px; border-bottom: 1px solid var(--line); }
+.row:last-child { border-bottom: none; }
+.row.tap { cursor: pointer; } .row.tap:active { background: var(--bg-sub); }
+.daybox { width: 42px; flex-shrink: 0; text-align: center; }
+.daybox .d { font-size: 18px; font-weight: 600; line-height: 1.1; font-variant-numeric: tabular-nums; }
+.daybox .w { font-size: 11px; color: var(--text-3); font-weight: 500; }
+.daybox.weekend .d { color: var(--danger); }
+.row-body { flex: 1; min-width: 0; }
+.row-title { font-size: 14px; font-weight: 600; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.row-sub { font-size: 12px; color: var(--text-2); margin-top: 2px; font-variant-numeric: tabular-nums; }
+.row-note { font-size: 12px; color: var(--text-3); margin-top: 3px; white-space: pre-wrap; }
+.row-right { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; flex-shrink: 0; }
+.dur { font-size: 15px; font-weight: 600; color: var(--text); font-variant-numeric: tabular-nums; }
+.avatar { width: 36px; height: 36px; border-radius: 10px; background: var(--accent); color: #fff; font-weight: 600; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 14px; }
+.avatar.gray { background: var(--bg-sub); color: var(--text-2); border: 1px solid var(--line); }
+.empty { text-align: center; padding: 40px 16px; color: var(--text-3); }
+.empty .ico { display: none; }
+.empty p { font-size: 14px; }
+.ckbox { width: 22px; height: 22px; border-radius: 50%; border: 1.5px solid var(--text-3); flex-shrink: 0; position: relative; }
+.ckbox.on { background: var(--accent); border-color: var(--accent); }
+.ckbox.on::after { content: ''; position: absolute; left: 7px; top: 3px; width: 5px; height: 10px; border: solid #fff; border-width: 0 2px 2px 0; transform: rotate(45deg); }
+.selbar { position: fixed; left: 0; right: 0; bottom: calc(var(--nav-h) + var(--safe-b)); z-index: 29; display: flex; justify-content: center; pointer-events: none; }
+.selbar-inner { pointer-events: auto; width: calc(100% - 32px); max-width: 528px; background: var(--accent); color: #fff; border-radius: 14px; padding: 10px 12px 10px 16px; display: flex; align-items: center; gap: 10px; box-shadow: var(--shadow-lg); font-size: 13px; }
+.selbar-inner .n { font-weight: 600; flex: 1; }
+.selbar-inner button { color: #fff; font-weight: 600; font-size: 13px; padding: 8px 10px; border-radius: 9px; }
+.selbar-inner button.del { background: #fff; color: var(--danger); }
+.selbar-inner button:disabled { opacity: .4; }
+
+/* ===== 월 선택 ===== */
+.monthbar { display: flex; align-items: center; justify-content: space-between; background: var(--bg-elev); border: 1px solid var(--line); border-radius: 12px; padding: 4px; margin-bottom: 12px; }
+.monthbar button { width: 40px; height: 36px; border-radius: 9px; font-size: 18px; font-weight: 500; color: var(--text-2); }
+.monthbar button:active { background: var(--bg-sub); }
+.monthbar .m { font-weight: 600; font-size: 15px; }
+.filters { display: flex; gap: 6px; margin-bottom: 12px; flex-wrap: wrap; align-items: center; }
+.filters select { width: auto; flex: 1; min-width: 100px; padding: 8px 12px; font-size: 13px; font-weight: 500; }
+.pill { padding: 7px 12px; border-radius: 999px; font-size: 12px; font-weight: 600; background: var(--bg-elev); border: 1px solid var(--line); color: var(--text-2); }
+.pill.on { background: var(--accent); color: #fff; border-color: var(--accent); }
+.pill.on.night, .pill.on.special { background: var(--accent); border-color: var(--accent); }
+
+/* ===== 설정 행 ===== */
+.setrow { display: flex; align-items: center; gap: 12px; padding: 13px 16px; border-bottom: 1px solid var(--line); }
+.setrow:last-child { border-bottom: none; }
+.setrow .ico { display: none; }
+.setrow .lbl { flex: 1; font-size: 14px; font-weight: 600; }
+.setrow .lbl small { display: block; font-size: 11px; color: var(--text-3); font-weight: 500; margin-top: 1px; }
+.setrow .val { font-size: 13px; color: var(--text-3); font-weight: 500; }
+.setrow input.inline { width: auto; max-width: 150px; padding: 7px 10px; font-size: 14px; font-weight: 500; }
+.toggle { width: 46px; height: 28px; border-radius: 999px; background: var(--line); position: relative; transition: background .2s; flex-shrink: 0; }
+.toggle::after { content: ''; position: absolute; top: 3px; left: 3px; width: 22px; height: 22px; border-radius: 50%; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.25); transition: left .2s; }
+.toggle.on { background: var(--ok); } .toggle.on::after { left: 21px; }
+.swatches { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+.swatch { width: 32px; height: 32px; border-radius: 50%; border: 2px solid transparent; cursor: pointer; transition: transform .1s; position: relative; }
+.swatch.on { box-shadow: 0 0 0 2px var(--bg-elev), 0 0 0 3.5px var(--text); }
+.swatch-custom { width: 32px; height: 32px; border-radius: 50%; overflow: hidden; border: 1px dashed var(--text-3); position: relative; }
+.swatch-custom input { position: absolute; inset: -8px; width: 60px; height: 60px; padding: 0; border: none; cursor: pointer; }
+.textarea { min-height: 80px; resize: vertical; line-height: 1.5; }
+.notice { background: var(--bg-elev); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; font-size: 13px; color: var(--text-2); margin-bottom: 14px; line-height: 1.55; }
+.notice.info { background: var(--bg-elev); color: var(--text-2); }
+.notice.ok { color: var(--ok); border-color: var(--ok-soft); background: var(--ok-soft); }
+.notice.danger { color: var(--danger); border-color: var(--danger-soft); background: var(--danger-soft); }
+.notice b { font-weight: 600; color: var(--text); }
+.alert-banner { display: flex; gap: 12px; align-items: center; background: var(--accent); color: #fff; border-radius: 14px; padding: 14px 16px; margin-bottom: 14px; }
+.alert-banner .t { font-weight: 600; font-size: 14px; }
+.alert-banner .s { font-size: 12px; opacity: .7; margin-top: 2px; }
+.alert-banner .btn { background: #fff; color: var(--accent); padding: 9px 13px; font-size: 13px; }
+.rules { counter-reset: r; }
+.rule { display: flex; gap: 10px; padding: 9px 0; border-bottom: 1px solid var(--line); font-size: 13px; line-height: 1.55; color: var(--text-2); }
+.rule:last-child { border-bottom: none; }
+.rule::before { counter-increment: r; content: counter(r); width: 20px; height: 20px; border-radius: 50%; background: var(--bg-sub); color: var(--text-2); font-size: 11px; font-weight: 600; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 1px; }
+.hist { border-left: 1px solid var(--line); margin-left: 8px; padding-left: 14px; }
+.hist-item { position: relative; padding: 6px 0 12px; font-size: 13px; }
+.hist-item::before { content: ''; position: absolute; left: -18px; top: 12px; width: 7px; height: 7px; border-radius: 50%; background: var(--text-3); }
+.hist-item .when { font-size: 11px; color: var(--text-3); font-weight: 500; }
+.hist-item .what { font-weight: 600; margin-top: 2px; }
+.hist-item .chg { color: var(--text-2); margin-top: 2px; }
+.hist-item .why { color: var(--text-2); margin-top: 2px; }
+.audit-row { padding: 12px 16px; border-bottom: 1px solid var(--line); font-size: 13px; }
+.audit-row:last-child { border-bottom: none; }
+.audit-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 3px; }
+.audit-head .a { font-weight: 600; }
+.audit-head .t { font-size: 11px; color: var(--text-3); }
+.audit-row .by { color: var(--text-2); }
+.audit-row .why { color: var(--text-3); margin-top: 2px; }
+.audit-row .diff { margin-top: 4px; display: flex; gap: 6px; align-items: center; font-size: 12px; }
+.audit-row .diff .b { text-decoration: line-through; color: var(--danger); }
+.audit-row .diff .a2 { color: var(--ok); font-weight: 600; }
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.kv { display: flex; justify-content: space-between; font-size: 13px; padding: 8px 0; border-bottom: 1px solid var(--line); gap: 12px; }
+.kv:last-child { border-bottom: none; }
+.kv b { font-weight: 600; text-align: right; }
+.progress { height: 6px; background: var(--bg-sub); border-radius: 999px; overflow: hidden; }
+.progress > div { height: 100%; border-radius: 999px; background: var(--accent); transition: width .3s; }
+.progress > div.warn { background: var(--warn); } .progress > div.danger { background: var(--danger); }
+
+/* ===== 모달·시트 ===== */
+.overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.4); backdrop-filter: blur(2px); -webkit-backdrop-filter: blur(2px); z-index: 100; display: none; align-items: flex-end; justify-content: center; }
+.overlay.active { display: flex; }
+.sheet { width: 100%; max-width: 560px; max-height: 90dvh; overflow-y: auto; background: var(--bg-elev); border-radius: 20px 20px 0 0; padding: 10px 20px calc(20px + var(--safe-b)); animation: up .22s cubic-bezier(.2,.8,.2,1); }
+.sheet::before { content: ''; display: block; width: 36px; height: 4px; border-radius: 999px; background: var(--line); margin: 4px auto 16px; }
+@keyframes up { from { transform: translateY(40px); opacity: 0; } to { transform: none; opacity: 1; } }
+.sheet-title { font-size: 18px; font-weight: 700; margin-bottom: 4px; letter-spacing: -0.02em; }
+.sheet-sub { font-size: 13px; color: var(--text-2); margin-bottom: 16px; }
+.sheet-foot { display: flex; gap: 8px; margin-top: 18px; }
+.sheet-foot .btn { flex: 1; }
+.dialog-wrap { position: fixed; inset: 0; z-index: 110; display: none; align-items: center; justify-content: center; padding: 24px; background: rgba(0,0,0,0.45); backdrop-filter: blur(2px); }
+.dialog-wrap.active { display: flex; }
+.dialog { background: var(--bg-elev); border-radius: 18px; padding: 26px 22px 18px; width: 100%; max-width: 340px; text-align: center; box-shadow: var(--shadow-lg); animation: pop .18s ease-out; }
+@keyframes pop { from { transform: scale(.96); opacity: 0; } to { transform: none; opacity: 1; } }
+.dialog .ico { display: none; }
+.dialog h3 { font-size: 17px; font-weight: 700; margin-bottom: 8px; }
+.dialog p { font-size: 13px; color: var(--text-2); line-height: 1.55; white-space: pre-line; }
+.dialog .btns { display: flex; gap: 8px; margin-top: 18px; }
+.dialog .btns .btn { flex: 1; }
+#toasts { position: fixed; top: calc(14px + var(--safe-t)); left: 50%; transform: translateX(-50%); z-index: 200; display: flex; flex-direction: column; gap: 8px; width: calc(100% - 32px); max-width: 420px; pointer-events: none; }
+.toast { background: var(--accent); color: #fff; padding: 11px 16px; border-radius: 12px; font-size: 13px; font-weight: 500; box-shadow: var(--shadow-lg); display: flex; gap: 8px; align-items: center; animation: pop .2s; }
+.toast.err { background: var(--danger); }
+.toast.warn { background: #3A3A3C; }
+.toast > span:first-child:empty { display: none; }
+.spin { width: 18px; height: 18px; border: 2px solid rgba(255,255,255,0.35); border-top-color: #fff; border-radius: 50%; animation: rot .7s linear infinite; display: inline-block; }
+.spin.dark { border-color: var(--line); border-top-color: var(--text); }
+@keyframes rot { to { transform: rotate(360deg); } }
+.loading { display: flex; justify-content: center; padding: 60px 0; }
+.sheet .pill { background: var(--bg-sub); }
+.install-step { display: flex; gap: 12px; align-items: flex-start; margin-bottom: 12px; font-size: 14px; line-height: 1.55; }
+.install-step .n { width: 24px; height: 24px; border-radius: 50%; background: var(--accent); color: #fff; font-size: 12px; font-weight: 600; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 1px; }
+.hidden { display: none !important; }
+.muted { color: var(--text-3); }
+.tiny { font-size: 11px; }
+.mt8 { margin-top: 8px; } .mt12 { margin-top: 12px; } .mb8 { margin-bottom: 8px; }
+
+/* ===== 가져오기 미리보기 표 ===== */
+.imp-table { width: 100%; border-collapse: collapse; font-size: 12px; white-space: nowrap; }
+.imp-table th { position: sticky; top: 0; background: var(--bg-sub); font-weight: 800; padding: 7px 8px; border-bottom: 1px solid var(--line); text-align: left; }
+.imp-table td { padding: 6px 8px; border-bottom: 1px solid var(--line); }
+.imp-table tr.dup td, .imp-table tr.skip td { color: var(--text-3); }
+.imp-table tr.error td, .imp-table tr.unknown td { background: var(--danger-soft); }
+.imp-table td.l { white-space: normal; min-width: 140px; }
+
+/* ===== 접는 묶음 (설정·내 정보) ===== */
+details.grp { background: var(--bg-elev); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow-sm); margin-bottom: 12px; overflow: hidden; }
+details.grp > summary { list-style: none; display: flex; align-items: center; gap: 12px; padding: 14px 16px; cursor: pointer; font-weight: 600; font-size: 14px; user-select: none; }
+details.grp > summary::-webkit-details-marker { display: none; }
+details.grp > summary .ico { display: none; }
+details.grp > summary .lbl { flex: 1; min-width: 0; } details.grp > summary .lbl small { display: block; font-size: 11px; color: var(--text-3); font-weight: 600; margin-top: 1px; }
+details.grp > summary .val { color: var(--text-3); font-size: 16px; transition: transform .2s; } details.grp[open] > summary .val { transform: rotate(90deg); }
+details.grp .grp-body { padding: 6px 14px 14px; border-top: 1px solid var(--line); }
+details.grp .grp-body .list, details.grp .grp-body .card { box-shadow: none; }
+details.grp .grp-body .list:last-child, details.grp .grp-body .card:last-child { margin-bottom: 0; }
+.login-help { display: block; text-align: center; margin-top: 14px; font-size: 13px; color: var(--accent); cursor: pointer; font-weight: 700; }
+.login-rem { text-align: center; margin-bottom: 14px; } .login-rem b { display: block; font-size: 16px; font-weight: 900; } .login-rem a { font-size: 12px; color: var(--accent); cursor: pointer; font-weight: 700; }
+
+/* ===== PDF 템플릿 (화면엔 안 보임) ===== */
+#pdf-root { position: fixed; left: -10000px; top: 0; width: 794px; background: #fff; color: #111; font-family: Pretendard, "Malgun Gothic", sans-serif; }
+.pdf-page { width: 794px; min-height: 1123px; padding: 48px 46px; box-sizing: border-box; page-break-after: always; position: relative; background: #fff; }
+.pdf-page:last-child { page-break-after: auto; }
+.pdf-head { display: flex; align-items: center; justify-content: space-between; border-bottom: 3px solid #111; padding-bottom: 14px; margin-bottom: 16px; }
+.pdf-head img { max-height: 44px; max-width: 150px; object-fit: contain; }
+.pdf-head .co { font-size: 13px; color: #555; font-weight: 700; }
+.pdf-head h1 { font-size: 24px; font-weight: 900; letter-spacing: -0.5px; margin-top: 2px; }
+.pdf-meta { text-align: right; font-size: 11px; color: #555; line-height: 1.6; }
+.pdf-meta b { font-size: 14px; color: #111; }
+.pdf-sec { font-size: 14px; font-weight: 900; margin: 18px 0 8px; padding-left: 10px; border-left: 4px solid #111; }
+.pdf-table { width: 100%; border-collapse: collapse; font-size: 11px; }
+.pdf-table th { background: #F1F5F9; border: 1px solid #CBD5E1; padding: 7px 6px; font-weight: 800; text-align: center; }
+.pdf-table td { border: 1px solid #CBD5E1; padding: 6px; text-align: center; vertical-align: middle; white-space: nowrap; }
+.pdf-table td.l { white-space: normal; }
+.pdf-table td.l { text-align: left; }
+.pdf-table tr.tot td { background: #F8FAFC; font-weight: 900; }
+.pdf-table .edited { color: #B45309; font-weight: 700; }
+.pdf-note { font-size: 10.5px; color: #555; line-height: 1.6; margin-top: 10px; }
+.pdf-sign { display: flex; gap: 30px; margin-top: 26px; }
+.pdf-sign > div { flex: 1; border-top: 1.5px solid #111; padding-top: 8px; font-size: 12px; font-weight: 700; }
+.pdf-sign > div span { display: inline-block; margin-left: 10px; font-weight: 400; color: #777; }
+.pdf-foot { position: absolute; bottom: 24px; left: 46px; right: 46px; display: flex; justify-content: space-between; font-size: 10px; color: #888; border-top: 1px solid #E2E8F0; padding-top: 8px; }
+.pdf-chip { display: inline-block; padding: 1px 6px; border-radius: 6px; font-size: 10px; font-weight: 800; }
+.pdf-chip.ot { background: #DBEAFE; color: #1D4ED8; } .pdf-chip.sp { background: #CFFAFE; color: #0E7490; }
+</style>
+</head>
+<body>
+<div id="app-bg"></div>
+<div id="toasts"></div>
+
+<!-- ===== 로그인 ===== -->
+<div id="view-login" class="view">
+  <div class="login-wrap">
+    <div class="login-card">
+      <div class="login-brand">
+        <img id="login-logo" src="" alt="" style="display:none;">
+        <div class="mark" id="login-mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2.5"/><path d="M9 2h6"/></svg></div>
+        <h1 id="login-title">근무기록</h1>
+        <p id="login-sub">사번과 PIN으로 로그인하세요</p>
+      </div>
+      <div class="login-rem hidden" id="login-rem"><b id="login-rem-name"></b><a onclick="forgetLoginId()">다른 사번으로 로그인</a></div>
+      <div class="field" id="login-id-field"><label>사번</label><input id="login-id" placeholder="사번 입력" inputmode="numeric" autocomplete="username"></div>
+      <div class="field"><label>PIN</label><input id="login-pin" type="password" placeholder="PIN 입력" inputmode="numeric" maxlength="8" autocomplete="current-password"></div>
+      <button class="btn btn-primary btn-full btn-lg" id="login-btn" onclick="doLogin()">로그인</button>
+      <div class="login-foot" id="login-foot">계정 문의는 대표님께</div>
+      <a class="login-help" onclick="showInstallGuide()">홈 화면에 앱 아이콘 만드는 법</a>
+    </div>
+  </div>
+</div>
+
+<!-- ===== 직원 ===== -->
+<div id="view-emp" class="view">
+  <div class="app">
+    <div class="topbar">
+      <div class="topbar-l">
+        <img class="topbar-logo" id="emp-logo" src="" alt="">
+        <div><div class="topbar-title" id="emp-title">근무기록</div><div class="topbar-sub" id="emp-name"></div></div>
+      </div>
+      <span class="chip chip-gray">직원</span>
+    </div>
+    <div class="content" id="emp-content"></div>
+    <div class="bottom-nav"><div class="bottom-nav-inner">
+      <button class="nav-item active" id="enav-today" onclick="empTab('today')"><span class="ico"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></span>오늘</button>
+      <button class="nav-item" id="enav-history" onclick="empTab('history')"><span class="ico"><svg viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></svg></span>기록</button>
+      <button class="nav-item" id="enav-me" onclick="empTab('me')"><span class="ico"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></span>설정</button>
+    </div></div>
+  </div>
+</div>
+
+<!-- ===== 관리자(대표) ===== -->
+<div id="view-admin" class="view">
+  <div class="app">
+    <div class="topbar">
+      <div class="topbar-l">
+        <img class="topbar-logo" id="adm-logo" src="" alt="">
+        <div><div class="topbar-title" id="adm-title">근무기록</div><div class="topbar-sub" id="adm-name"></div></div>
+      </div>
+      <span class="chip chip-accent" id="adm-role">대표</span>
+    </div>
+    <div class="content" id="adm-content"></div>
+    <div class="bottom-nav"><div class="bottom-nav-inner">
+      <button class="nav-item active" id="anav-dash" onclick="admTab('dash')"><span class="ico"><svg viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg></span>현황</button>
+      <button class="nav-item" id="anav-records" onclick="admTab('records')"><span class="ico"><svg viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></svg></span>기록</button>
+      <button class="nav-item" id="anav-pdf" onclick="admTab('pdf')"><span class="ico"><svg viewBox="0 0 24 24"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/></svg></span>PDF</button>
+      <button class="nav-item" id="anav-audit" onclick="admTab('audit')"><span class="ico"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg></span>이력</button>
+      <button class="nav-item" id="anav-settings" onclick="admTab('settings')"><span class="ico"><svg viewBox="0 0 24 24"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/></svg></span>설정</button>
+    </div></div>
+  </div>
+</div>
+
+<!-- 바텀시트 -->
+<div class="overlay" id="sheet-overlay"><div class="sheet" id="sheet-body"></div></div>
+<!-- 확인 대화상자 -->
+<div class="dialog-wrap" id="dialog-wrap"><div class="dialog"><div class="ico" id="dlg-ico"></div><h3 id="dlg-title"></h3><p id="dlg-msg"></p><div class="btns" id="dlg-btns"></div></div></div>
+<!-- PDF 렌더링 영역 -->
+<div id="pdf-root"></div>
+
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script>
+// =====================================================================
+//  근무기록 v2 — 핵심 (상수·상태·유틸·계산·데이터 계층·인증·테마)
+// =====================================================================
+const APP_VER = 'v2.4.1 (2026-11)';
+const DEMO = new URLSearchParams(location.search).get('demo') === '1';
+const SESSION_KEY = 'ot2_session';
+const SESSION_DAYS = 90;   // 직원 폰에서 90일마다 한 번만 다시 로그인 (2026-11-09, 전엔 30일)
+const AUTH_EMAIL_DOMAIN = '@otapp.internal';
+const WEEKDAYS = ['일','월','화','수','목','금','토'];
+const ACCENTS = ['#1D1D1F','#3A3A3C','#1F4E79','#2E5E4E','#5B4A3F','#4B3F72','#801D1F','#6E6E73'];
+const NIGHT_START = 22*60, NIGHT_END = 6*60; // 야간근로 22:00~06:00 (근로기준법 제56조 ③)
+
+// 하드코딩된 Firebase 설정 — 새 기기에서도 바로 로그인
+const FIREBASE_CONFIG = {
+  apiKey: 'AIzaSyCkmrMFVtGypkKR3E8_cN8KFRl7TuHupHw',
+  authDomain: 'stage-overtime-record-book.firebaseapp.com',
+  projectId: 'stage-overtime-record-book',
+  storageBucket: 'stage-overtime-record-book.appspot.com',
+  appId: '1:863807550061:web:a6d9bacd6493a2a9a4c564'
+};
+
+const DEFAULT_SETTINGS = {
+  companyName: '스테이지랩', appName: '근무기록',
+  loginSub: '사번과 PIN으로 로그인하세요', loginFoot: '계정 문의는 대표님께',
+  workStart: '09:00', workEnd: '19:00',
+  accent: '#1D1D1F', splash: '#1D1D1F', bgColor: '', bgImage: '', logo: '',
+  allowSelfEdit: true, pastDaysLimit: 0,           // 0 = 당월 내 제한 없음
+  allowPrevMonth: true,                             // 전월 기록 추가: 전월 1차 PDF 저장 전까지 허용
+  monthIndexed: false,                              // 모든 기록에 month 필드가 채워졌는지 (데이터 정리 후 true)
+  lawMode: 'under5',                                // under5 | over5
+  showPremium: false, weeklyLimitWarn: false,       // 가산 환산 표시 / 주 12시간 경고
+  noticeText: '',                                   // 직원 화면 공지
+  rulesText: '',                                    // 유의사항 (비우면 기본)
+  pdfFooter: '본 기록은 직원 본인이 직접 입력하고, 모든 수정·삭제 이력은 앱 감사이력에 영구 보관됩니다. 대표(사용자)는 기록을 임의로 수정할 수 없습니다.',
+  pdfSignEmp: '직원 확인', pdfSignBoss: '대표 확인'
+};
+const DEFAULT_RULES = [
+  '근무 기록은 실제 근무한 시간만 정확하게 입력합니다. 허위·과장 입력은 금지됩니다.',
+  '본인 기록의 수정·삭제·과거 날짜 추가는 가능하지만, 반드시 사유를 입력해야 하며 모든 이력이 영구 보관됩니다.',
+  '타인의 계정을 사용하거나 타인 명의로 기록을 입력·수정하는 행위를 엄격히 금지합니다.',
+  '대표(사용자)는 기록을 열람·출력만 할 수 있고 임의로 수정할 수 없습니다. 기록의 책임은 입력한 본인에게 있습니다.',
+  '이 기록은 급여 정산 및 근로시간 관리의 공식 자료로 사용되며, 매월 PDF로 보관됩니다.',
+  '야간근로(22:00~06:00)는 별도로 집계됩니다. 위반 행위 발생 시 관련 법령에 따라 책임을 질 수 있습니다.'
+];
+
+let state = {
+  user: null, settings: { ...DEFAULT_SETTINGS },
+  empTab: 'today', empType: 'overtime', empMonth: monthStr(), empFilter: 'all',
+  admTab: 'dash', admMonth: monthStr(), admEmp: 'all', admType: 'all',
+  pdfLog: {}, employeesCache: null,
+  empTypeManual: false, setOpen: {}, meOpen: '', firstLogin: false,
+  empSelect: false, empSel: new Set()
+};
+
+// ===== 유틸 =====
+function pad(n) { return String(n).padStart(2,'0'); }
+function todayStr() { const d=new Date(); return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`; }
+function monthStr(d) { d = d || new Date(); return `${d.getFullYear()}-${pad(d.getMonth()+1)}`; }
+function prevMonthStr(m) { const [y,mo]=(m||monthStr()).split('-').map(Number); const d=new Date(y,mo-2,1); return monthStr(d); }
+function shiftMonth(m, dir) { const [y,mo]=m.split('-').map(Number); return monthStr(new Date(y,mo-1+dir,1)); }
+function nowHM() { const d=new Date(); return `${pad(d.getHours())}:${pad(d.getMinutes())}`; }
+function monthLabel(m) { const [y,mo]=m.split('-'); return `${y}년 ${parseInt(mo)}월`; }
+function dateInfo(s) { const d=new Date(s+'T00:00:00'); return { day:d.getDate(), wd:WEEKDAYS[d.getDay()], weekend:d.getDay()===0||d.getDay()===6, label:`${d.getMonth()+1}/${d.getDate()}(${WEEKDAYS[d.getDay()]})` }; }
+function daysInMonth(m) { const [y,mo]=m.split('-').map(Number); return new Date(y,mo,0).getDate(); }
+function esc(s) { return String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
+function fmtMin(m) { m = Math.round(m||0); if (!m) return '0분'; const h=Math.floor(m/60), mm=m%60; if(!h) return `${mm}분`; if(!mm) return `${h}시간`; return `${h}시간 ${mm}분`; }
+function fmtH(m) { return (Math.round((m||0)/60*100)/100).toFixed(2); }
+function toMin(hm) { if(!hm) return 0; const [h,m]=hm.split(':').map(Number); return h*60+(m||0); }
+function fmtDT(ts) { if(!ts) return ''; const d = ts.toDate ? ts.toDate() : new Date(ts); return `${d.getFullYear()}.${pad(d.getMonth()+1)}.${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`; }
+function hexRgb(hex) { const n=parseInt((hex||'#2563EB').replace('#',''),16); return `${(n>>16)&255},${(n>>8)&255},${n&255}`; }
+function shade(hex, amt) { const n=parseInt((hex||'#2563EB').replace('#',''),16); const c=v=>Math.max(0,Math.min(255,v+amt)); return '#'+[c(n>>16),c((n>>8)&255),c(n&255)].map(v=>v.toString(16).padStart(2,'0')).join(''); }
+function uid() { return Math.random().toString(36).slice(2,10)+Date.now().toString(36); }
+function withTimeout(p, ms=12000) { return Promise.race([p, new Promise((_,rej)=>setTimeout(()=>rej(new Error('서버 응답이 없습니다 ('+ms/1000+'초)')),ms))]); }
+
+// ===== 근로시간 계산 =====
+// 야간(22:00~06:00) 겹침 분 계산 — [s,e) 분 단위, e는 s보다 클 수 있음(자정 넘김 시 +1440)
+function nightOverlap(s, e) {
+  let total = 0;
+  // 야간 구간: [-120, 360) = 전날 22시~06시, [1320, 1800) = 당일 22시~익일 06시
+  for (const [ns, ne] of [[-120, 360], [1320, 1800], [2760, 3240]]) {
+    const a = Math.max(s, ns), b = Math.min(e, ne);
+    if (b > a) total += b - a;
+  }
+  return total;
+}
+// 야근(연장): 정규 퇴근 이후 ~ 실제 퇴근. 06:00 이전 시각은 다음날 새벽으로 인정, 그 외 퇴근 전 시각은 0
+function calcOvertime(workEnd, actualEnd) {
+  const w = toMin(workEnd); let a = toMin(actualEnd);
+  if (a < w) { if (a <= 360) a += 1440; else return { minutes: 0, night: 0 }; }
+  return { minutes: Math.max(0, a - w), night: nightOverlap(w, a) };
+}
+// 특근(휴일근로): 시작~종료, 휴게 제외. 종료가 시작보다 이르면 자정 넘김
+function calcSpecial(start, end, breakMin) {
+  const s = toMin(start); let e = toMin(end);
+  if (e <= s) e += 1440;
+  const gross = e - s, brk = Math.max(0, Math.min(gross, breakMin||0));
+  return { minutes: Math.max(0, gross - brk), night: nightOverlap(s, e), gross };
+}
+function autoBreak(gross) { return gross >= 480 ? 60 : gross >= 240 ? 30 : 0; } // 근로기준법 제54조 휴게
+// 기록 1건의 집계값 (구버전 기록도 시간으로 재계산)
+function recCalc(r) {
+  if (r.type === 'special') { const c = calcSpecial(r.startTime, r.endTime, r.breakMinutes||0); return { minutes: c.minutes, night: c.night, kind:'special' }; }
+  const c = calcOvertime(r.workEndTime || state.settings.workEnd, r.actualEndTime); return { minutes: c.minutes, night: c.night, kind:'overtime' };
+}
+// 가산 환산시간(참고용): 연장 1.5배, 야간 +0.5배, 휴일 8시간 이내 1.5배·초과 2배 (제56조 — 5인 이상 사업장 의무)
+function premiumHours(summary) {
+  const ot = summary.ot, sp = summary.sp, night = summary.night;
+  const spIn = Math.min(sp, 480), spOver = Math.max(0, sp - 480);
+  return (ot*1.5 + spIn*1.5 + spOver*2 + night*0.5) / 60;
+}
+function summarize(records) {
+  const s = { ot:0, sp:0, night:0, otDays:0, spDays:0, edits:0 };
+  records.forEach(r => { const c = recCalc(r); if (c.kind==='special') { s.sp += c.minutes; s.spDays++; } else { s.ot += c.minutes; s.otDays++; } s.night += c.night; s.edits += (r.editCount||0); });
+  s.total = s.ot + s.sp; s.premium = premiumHours(s);
+  return s;
+}
+// 주(월~일) 단위 연장시간 합계 — 주 12시간 한도 경고용
+function weekKey(dateStr) { const d=new Date(dateStr+'T00:00:00'); const day=(d.getDay()+6)%7; d.setDate(d.getDate()-day); return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`; }
+function weeklyOvertime(records) { const w={}; records.forEach(r=>{ if(r.type==='special') return; const k=weekKey(r.date); w[k]=(w[k]||0)+recCalc(r).minutes; }); return w; }
+
+// ===== 데이터 계층 (Firebase / 데모) =====
+let db = null, auth = null;
+const Fire = {
+  async init() {
+    if (firebase.apps.length) for (const a of firebase.apps) { try { await a.delete(); } catch{} }
+    const app = firebase.initializeApp(FIREBASE_CONFIG);
+    db = firebase.firestore(app);
+    try { await db.enablePersistence({ synchronizeTabs: true }); } catch(e) {}
+    auth = firebase.auth(app);
+  },
+  ts() { return firebase.firestore.FieldValue.serverTimestamp(); },
+  empEmail(empId, gen) { const b = empId.toLowerCase().replace(/[^a-z0-9]/g,''); return (gen ? `${b}-g${gen}` : b) + AUTH_EMAIL_DOMAIN; },
+  pwd(pin) { return pin + '@@ot'; },
+  async signIn(empId, pin) {
+    const hintKey = 'ot_authgen_'+empId; const hint = parseInt(localStorage.getItem(hintKey)||'0',10)||0;
+    let ok=false, lastErr=null;
+    const tryGen = async g => { await auth.signInWithEmailAndPassword(Fire.empEmail(empId,g), Fire.pwd(pin)); try{localStorage.setItem(hintKey,String(g));}catch{} ok=true; };
+    if (hint>0) { try { await tryGen(hint); } catch(e) { lastErr=e; } }
+    let g=0, usedGen=hint;
+    // PIN 초기화 세대(gen)를 0부터 차례로 시도. 틀린 PIN이면 최대 8번 안에서 멈춘다(무한 시도로 Firebase가 잠그는 것 방지)
+    while (!ok && g<=8) {
+      if (g===hint && hint>0) { g++; continue; }
+      try { await tryGen(g); usedGen=g; break; }
+      catch(e) { lastErr=e; if (e.code==='auth/user-not-found'||e.code==='auth/too-many-requests'||e.code==='auth/network-request-failed') break; if (['auth/wrong-password','auth/invalid-credential','auth/invalid-login-credentials'].includes(e.code)) { g++; continue; } break; }
+    }
+    if (!ok) throw lastErr;
+    const snap = await db.collection('employees').where('employeeId','==',empId).limit(1).get();
+    if (snap.empty) { await auth.signOut(); throw new Error('사번을 찾을 수 없습니다'); }
+    const d = snap.docs[0]; if (d.data().active===false) { await auth.signOut(); throw new Error('비활성화된 계정입니다'); }
+    // PIN이 초기화된 뒤 예전 PIN으로 들어온 경우 차단 (직원 문서의 authGen과 다르면 거부)
+    if ((d.data().authGen||0) !== usedGen) { await auth.signOut(); try{localStorage.setItem(hintKey,String(d.data().authGen||0));}catch{} const e=new Error('PIN이 초기화되었습니다. 새 PIN으로 로그인하세요'); e.code='auth/pin-reset'; throw e; }
+    const u = { id:d.id, ...d.data() };
+    if (u.employeeId==='admin' && u.role==='admin') { try { await d.ref.update({role:'superadmin'}); u.role='superadmin'; } catch{} }
+    return u;
+  },
+  async signOut() { await auth.signOut(); },
+  onAuth(cb) { auth.onAuthStateChanged(cb); },
+  async getEmployeeById(docId) { const d = await db.collection('employees').doc(docId).get(); return d.exists ? { id:d.id, ...d.data() } : null; },
+  async changePin(oldPin, newPin) {
+    const cred = firebase.auth.EmailAuthProvider.credential(auth.currentUser.email, Fire.pwd(oldPin));
+    await auth.currentUser.reauthenticateWithCredential(cred);
+    await auth.currentUser.updatePassword(Fire.pwd(newPin));
+  },
+  async createEmployee(data) {
+    const sec = firebase.initializeApp(FIREBASE_CONFIG, 'tmp_'+Date.now()); const ta = firebase.auth(sec);
+    try { await ta.createUserWithEmailAndPassword(Fire.empEmail(data.employeeId), Fire.pwd(data.pin)); } finally { await sec.delete(); }
+    const ref = await db.collection('employees').add({ name:data.name, employeeId:data.employeeId, dept:data.dept||'', role:data.role||'employee', active:true, authGen:0, createdAt:Fire.ts() });
+    return ref.id;
+  },
+  async resetPin(docId, empId, newPin) {
+    const d = await db.collection('employees').doc(docId).get(); const gen = (d.data().authGen||0)+1;
+    const sec = firebase.initializeApp(FIREBASE_CONFIG, 'tmp_pin_'+Date.now()); const ta = firebase.auth(sec);
+    try { await ta.createUserWithEmailAndPassword(Fire.empEmail(empId,gen), Fire.pwd(newPin)); } finally { await sec.delete(); }
+    await db.collection('employees').doc(docId).update({ authGen: gen });
+  },
+  async listEmployees(activeOnly=true) {
+    let q = db.collection('employees'); if (activeOnly) q = q.where('active','==',true);
+    const snap = await withTimeout(q.get());
+    return snap.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>(a.createdAt?.toMillis?.()||0)-(b.createdAt?.toMillis?.()||0));
+  },
+  async updateEmployee(id, data) { await db.collection('employees').doc(id).update(data); },
+  async getSettings() {
+    const out = {};
+    for (const [doc, key] of [['main',null],['logo','logo'],['bgimage','bgImage']]) {
+      try { const d = await db.collection('settings').doc(doc).get(); if (d.exists) { const v=d.data(); if (key) { if (v[key]!==undefined) out[key]=v[key]; else if (doc==='logo'&&v.logoData!==undefined) out.logo=v.logoData; else if (doc==='bgimage'&&v.appBgImage!==undefined) out.bgImage=v.appBgImage; } else Object.assign(out, v); } } catch(e) {}
+    }
+    try { const p = await db.collection('settings').doc('pdflog').get(); state.pdfLog = p.exists ? (p.data().log||{}) : {}; } catch(e) {}
+    return out;
+  },
+  async saveSettings(partial) { const d={...partial}; delete d.logo; delete d.bgImage; await db.collection('settings').doc('main').set(d,{merge:true}); },
+  async saveLogo(v) { await db.collection('settings').doc('logo').set({ logo:v||'', logoData:v||'' }); },
+  async saveBg(v) { await db.collection('settings').doc('bgimage').set({ bgImage:v||'', appBgImage:v||'' }); },
+  async setPdfLog(key, info) { state.pdfLog[key]=info; await db.collection('settings').doc('pdflog').set({ log: state.pdfLog }, {merge:true}); },
+  async listRecords({month, empId}={}) {
+    let q = db.collection('overtime_records');
+    // 직원+달 조회: 데이터 정리(month 필드 채우기)가 끝났으면 그 달 것만 읽고, 아니면 예전처럼 직원 전체를 읽어 거른다
+    if (empId && empId!=='all') { q = q.where('employeeId','==',empId); if (month && state.settings.monthIndexed) q = q.where('month','==',month); }
+    else if (month) q = q.where('date','>=',month+'-01').where('date','<=',month+'-31');
+    const snap = await withTimeout(q.get());
+    let rs = snap.docs.map(d=>({id:d.id,...d.data()}));
+    if (empId && empId!=='all' && month) rs = rs.filter(r=>r.date>=month+'-01'&&r.date<=month+'-31');
+    return rs.sort((a,b)=>b.date.localeCompare(a.date)||(a.type||'').localeCompare(b.type||''));
+  },
+  async listAllRecords() { const snap = await withTimeout(db.collection('overtime_records').get(), 60000); return snap.docs.map(d=>({id:d.id,...d.data()})); },
+  // 묶음 저장(가져오기용): 400건씩 나눠서 저장, 만든 id 목록 반환
+  async addRecords(list) {
+    const ids = []; const uid = auth.currentUser?.uid||'';
+    for (let i=0;i<list.length;i+=400) { const b = db.batch(); list.slice(i,i+400).forEach(r => { const ref = db.collection('overtime_records').doc(); ids.push(ref.id); b.set(ref, { ...r, createdAt:Fire.ts(), updatedAt:Fire.ts(), uid }); }); await b.commit(); }
+    return ids;
+  },
+  async updateRecords(pairs) { for (let i=0;i<pairs.length;i+=400) { const b = db.batch(); pairs.slice(i,i+400).forEach(([id,data]) => b.update(db.collection('overtime_records').doc(id), data)); await b.commit(); } },
+  async deleteRecords(ids) { for (let i=0;i<ids.length;i+=400) { const b = db.batch(); ids.slice(i,i+400).forEach(id => b.delete(db.collection('overtime_records').doc(id))); await b.commit(); } },
+  async addAudits(list) { for (let i=0;i<list.length;i+=400) { const b = db.batch(); list.slice(i,i+400).forEach(a => b.set(db.collection('audit_logs').doc(), { ...a, timestamp:Fire.ts() })); await b.commit(); } },
+  async saveImportBatch(id, data) { await db.collection('import_batches').doc(id).set(data, { merge:true }); },
+  async listImportBatches() { const snap = await withTimeout(db.collection('import_batches').get()); return snap.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>String(b.at||'').localeCompare(String(a.at||''))); },
+  async listRecordsByBatch(batch) { const snap = await withTimeout(db.collection('overtime_records').where('importBatch','==',batch).get()); return snap.docs.map(d=>({id:d.id,...d.data()})); },
+  async getRecord(id) { const d = await db.collection('overtime_records').doc(id).get(); return d.exists ? {id:d.id,...d.data()} : null; },
+  async addRecord(data) { const ref = await db.collection('overtime_records').add({ ...data, createdAt:Fire.ts(), updatedAt:Fire.ts(), uid: auth.currentUser?.uid||'' }); return ref.id; },
+  async updateRecord(id, data) { await db.collection('overtime_records').doc(id).update({ ...data, updatedAt:Fire.ts(), editCount: firebase.firestore.FieldValue.increment(1) }); },
+  async deleteRecord(id) { await db.collection('overtime_records').doc(id).delete(); },
+  async addAudit(a) { await db.collection('audit_logs').add({ ...a, timestamp:Fire.ts() }); },
+  async listAudit({limit=150, recordId, month}={}) {
+    let q = db.collection('audit_logs');
+    if (recordId) q = q.where('recordId','==',recordId);
+    else if (month) q = q.where('targetDate','>=',month+'-01').where('targetDate','<=',month+'-31');
+    else q = q.orderBy('timestamp','desc').limit(limit);
+    const snap = await withTimeout(q.get());
+    return snap.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>(b.timestamp?.toMillis?.()||0)-(a.timestamp?.toMillis?.()||0));
+  }
+};
+
+// ---- 데모 (서버 없이 화면 확인용: ?demo=1 / 사장님 admin·0000, 직원 2973·1234) ----
+const Demo = (() => {
+  const T = () => new Date();
+  const emps = [
+    { id:'e0', name:'대표관리자', employeeId:'admin', dept:'관리', role:'superadmin', active:true, createdAt:T() },
+    { id:'e1', name:'김직원', employeeId:'2973', dept:'시공팀', role:'employee', active:true, createdAt:T() },
+    { id:'e2', name:'이직원', employeeId:'3468', dept:'시공팀', role:'employee', active:true, createdAt:T() },
+    { id:'e3', name:'박직원', employeeId:'7511', dept:'시공팀', role:'employee', active:true, createdAt:T() },
+    { id:'e4', name:'최직원', employeeId:'2242', dept:'시공팀', role:'employee', active:true, createdAt:T() }
+  ];
+  const pins = { admin:'0000', '2973':'1234', '3468':'1234', '7511':'1234', '2242':'1234' };
+  const recs = [], audits = [], batches = []; let settings = { companyName:'스테이지랩', appName:'STAGE 근무기록', noticeText:'10월 PDF는 11월 5일에 저장됩니다. 누락 기록은 당월 내에 추가해 주세요.' };
+  const m = monthStr(), pm = prevMonthStr(m);
+  const add = (emp, date, end, note, edits) => recs.push({ id:uid(), employeeId:emp.employeeId, employeeName:emp.name, date, type:'overtime', workEndTime:'19:00', actualEndTime:end, note:note||'', editCount:edits||0, createdAt:T(), updatedAt:T(), createdBy:emp.employeeId });
+  [pm, m].forEach(mm => { const dim = daysInMonth(mm); for (let d=1; d<=Math.min(dim, mm===m?T().getDate()-1:dim); d++) { const ds=`${mm}-${pad(d)}`; const w=new Date(ds+'T00:00:00').getDay(); if (w===0) continue; if (d%3===0) continue; emps.slice(1).forEach((e,i)=>{ if ((d+i)%4===0) return; const ends=['20:30','21:10','22:00','23:20','21:50']; add(e, ds, ends[(d+i)%5], (d+i)%7===0?'야간 시공 마무리':'' , (d+i)%9===0?1:0); }); } });
+  recs.push({ id:uid(), employeeId:'2973', employeeName:'김직원', date:`${pm}-12`, type:'special', startTime:'09:00', endTime:'18:00', breakMinutes:60, note:'토요일 출근 (벤츠 풀랩)', editCount:0, createdAt:T(), updatedAt:T(), createdBy:'2973' });
+  audits.push({ id:uid(), action:'update', recordId:recs[3].id, before:{...recs[3], actualEndTime:'20:00'}, after:{...recs[3]}, reason:'퇴근 시간 잘못 눌러서 정정', modifiedBy:'2973', modifiedByName:'김직원', modifiedByRole:'employee', targetEmployee:'2973', targetEmployeeName:'김직원', targetDate:recs[3].date, timestamp:T() });
+  let cur = null;
+  return {
+    async init() {}, ts() { return T(); },
+    async signIn(empId, pin) { if (pins[empId]!==pin) { const e=new Error('x'); e.code='auth/wrong-password'; throw e; } cur = emps.find(e=>e.employeeId===empId); return {...cur}; },
+    async signOut() { cur=null; }, onAuth(cb) { setTimeout(()=>cb(cur),10); },
+    async getEmployeeById(id) { return emps.find(e=>e.id===id)||null; },
+    async changePin(o,n) { if (pins[cur.employeeId]!==o) { const e=new Error('x'); e.code='auth/wrong-password'; throw e; } pins[cur.employeeId]=n; },
+    async createEmployee(d) { const e={ id:uid(), name:d.name, employeeId:d.employeeId, dept:d.dept||'', role:d.role||'employee', active:true, createdAt:T() }; emps.push(e); pins[d.employeeId]=d.pin; return e.id; },
+    async resetPin(id, empId, pin) { pins[empId]=pin; },
+    async listEmployees(a=true) { return emps.filter(e=>!a||e.active!==false).map(e=>({...e})); },
+    async updateEmployee(id, d) { Object.assign(emps.find(e=>e.id===id), d); },
+    async getSettings() { return {...settings}; }, async saveSettings(p) { Object.assign(settings, p); }, async saveLogo(v) { settings.logo=v; }, async saveBg(v) { settings.bgImage=v; },
+    async setPdfLog(k, i) { state.pdfLog[k]=i; },
+    async listRecords({month, empId}={}) { return recs.filter(r=>(!month||r.date.startsWith(month))&&(!empId||empId==='all'||r.employeeId===empId)).map(r=>({...r})).sort((a,b)=>b.date.localeCompare(a.date)); },
+    async getRecord(id) { const r=recs.find(x=>x.id===id); return r?{...r}:null; },
+    async addRecord(d) { const r={ id:uid(), ...d, createdAt:T(), updatedAt:T() }; recs.push(r); return r.id; },
+    async updateRecord(id, d) { const r=recs.find(x=>x.id===id); Object.assign(r, d, { updatedAt:T(), editCount:(r.editCount||0)+1 }); },
+    async deleteRecord(id) { const i=recs.findIndex(x=>x.id===id); if(i>=0) recs.splice(i,1); },
+    async listAllRecords() { return recs.map(r=>({...r})); },
+    async addRecords(list) { return list.map(d => { const r={ id:uid(), ...d, createdAt:T(), updatedAt:T() }; recs.push(r); return r.id; }); },
+    async updateRecords(pairs) { pairs.forEach(([id,d]) => { const r=recs.find(x=>x.id===id); if (r) Object.assign(r, d); }); },
+    async deleteRecords(ids) { ids.forEach(id => { const i=recs.findIndex(x=>x.id===id); if(i>=0) recs.splice(i,1); }); },
+    async addAudits(list) { list.forEach(a => audits.unshift({ id:uid(), ...a, timestamp:T() })); },
+    async saveImportBatch(id, d) { const b = batches.find(x=>x.id===id); if (b) Object.assign(b, d); else batches.push({ id, ...d }); },
+    async listImportBatches() { return batches.map(b=>({...b})).sort((a,b)=>String(b.at||'').localeCompare(String(a.at||''))); },
+    async listRecordsByBatch(batch) { return recs.filter(r=>r.importBatch===batch).map(r=>({...r})); },
+    async addAudit(a) { audits.unshift({ id:uid(), ...a, timestamp:T() }); },
+    async listAudit({recordId, month}={}) { return audits.filter(a=>(!recordId||a.recordId===recordId)&&(!month||(a.targetDate||'').startsWith(month))).map(a=>({...a})); }
+  };
+})();
+const DATA = DEMO ? Demo : Fire;
+
+// ===== 감사 이력 기록 =====
+async function writeAudit(action, recordId, before, after, reason) {
+  await DATA.addAudit({ action, recordId, before: before||null, after: after||null, reason: reason||'',
+    modifiedBy: state.user.employeeId, modifiedByName: state.user.name, modifiedByRole: state.user.role,
+    targetEmployee: before?.employeeId||after?.employeeId||'', targetEmployeeName: before?.employeeName||after?.employeeName||'', targetDate: before?.date||after?.date||'' });
+}
+
+// ===== 테마 / 개인화 =====
+const Pref = {
+  get(k, d) { try { return localStorage.getItem('ot2_'+k) ?? d; } catch { return d; } },
+  set(k, v) { try { if (v===null||v===undefined||v==='') localStorage.removeItem('ot2_'+k); else localStorage.setItem('ot2_'+k, v); } catch {} }
+};
+function applyTheme() {
+  const s = state.settings;
+  const accent = Pref.get('my_accent','') || ((s.accent && s.accent !== '#2563EB') ? s.accent : '#1D1D1F');   // 예전 기본 파랑이 서버에 남아 있으면 새 기본(검정)으로
+  const root = document.documentElement.style;
+  root.setProperty('--accent', accent); root.setProperty('--accent-rgb', hexRgb(accent)); root.setProperty('--accent-dark', shade(accent,-28)); root.setProperty('--accent-soft', `rgba(${hexRgb(accent)},0.10)`);
+  const mode = Pref.get('mode','light');
+  const dark = mode==='dark' || (mode==='auto' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+  if (dark) document.documentElement.setAttribute('data-theme','dark'); else document.documentElement.removeAttribute('data-theme');
+  const fs = Pref.get('fontsize',''); document.documentElement.style.fontSize = fs || '';
+  // 배경
+  const bgEl = document.getElementById('app-bg');
+  if (s.bgImage) { bgEl.style.backgroundImage = `url(${s.bgImage})`; document.body.classList.add('has-bg'); } else { bgEl.style.backgroundImage=''; document.body.classList.remove('has-bg'); }
+  if (s.bgColor) root.setProperty('--bg', s.bgColor); else root.removeProperty('--bg');
+  // 문구·로고
+  document.title = s.appName || '근무기록';
+  ['login-title','emp-title','adm-title'].forEach(id => { const el=document.getElementById(id); if (el) el.textContent = s.appName || '근무기록'; });
+  const ls = document.getElementById('login-sub'); if (ls) ls.textContent = s.loginSub || DEFAULT_SETTINGS.loginSub;
+  const lf = document.getElementById('login-foot'); if (lf) lf.textContent = s.loginFoot || DEFAULT_SETTINGS.loginFoot;
+  applyLogo(s.logo||'');
+  Pref.set('splash', s.splash||''); Pref.set('appname', s.appName||''); Pref.set('logo', s.logo||'');
+  injectPWA();
+}
+function applyLogo(logo) {
+  const has = !!logo;
+  const li = document.getElementById('login-logo'); if (li) { li.src = has?logo:''; li.style.display = has?'inline-block':'none'; }
+  const lm = document.getElementById('login-mark'); if (lm) lm.style.display = has?'none':'flex';
+  ['emp-logo','adm-logo'].forEach(id => { const e=document.getElementById(id); if (e) { e.src = has?logo:''; e.style.display = has?'block':'none'; } });
+}
+function injectPWA() {
+  const s = state.settings, splash = s.splash || '#1E293B';
+  const icon = s.logo || genIcon(splash); if (!icon) return;
+  const ati = document.getElementById('pwa-icon-link'); if (ati) ati.href = icon;
+  const manifest = { name:s.appName||'근무기록', short_name:(s.appName||'근무기록').slice(0,12), start_url:'./', display:'standalone', background_color:splash, theme_color:splash, orientation:'portrait-primary', icons:[{src:icon,sizes:'192x192',type:'image/png'},{src:icon,sizes:'512x512',type:'image/png'}] };
+  const ml = document.getElementById('pwa-manifest-link'); if (ml) { if (ml._u) URL.revokeObjectURL(ml._u); ml._u = URL.createObjectURL(new Blob([JSON.stringify(manifest)],{type:'application/manifest+json'})); ml.href = ml._u; }
+  const tc = document.querySelector('meta[name="theme-color"]'); if (tc) tc.content = splash;
+}
+function genIcon(color) {
+  try { const cv=document.createElement('canvas'); cv.width=cv.height=512; const x=cv.getContext('2d'); const r=110;
+    x.beginPath(); x.moveTo(r,0); x.lineTo(512-r,0); x.quadraticCurveTo(512,0,512,r); x.lineTo(512,512-r); x.quadraticCurveTo(512,512,512-r,512); x.lineTo(r,512); x.quadraticCurveTo(0,512,0,512-r); x.lineTo(0,r); x.quadraticCurveTo(0,0,r,0); x.closePath();
+    x.fillStyle=color; x.fill();
+    x.fillStyle='rgba(255,255,255,0.96)'; x.font='800 120px Pretendard,-apple-system,sans-serif'; x.textAlign='center'; x.textBaseline='middle'; x.fillText('근무',256,200); x.fillText('기록',256,330);
+    return cv.toDataURL('image/png'); } catch(e) { return null; }
+}
+
+// ===== 화면 전환 / 공통 UI =====
+function showView(v) { ['login','emp','admin'].forEach(id=>document.getElementById('view-'+id).classList.remove('active')); document.getElementById('view-'+v).classList.add('active'); window.scrollTo(0,0); if (v!=='emp') stopClock(); if (v==='login') prepLogin(); }
+// 로그인 화면 준비: 초대 링크(?e=사번)면 사번을 채우고, 전에 로그인한 사번이 있으면 PIN만 받는다
+function prepLogin() {
+  const q = new URLSearchParams(location.search), fromLink = (q.get('e')||'').trim();
+  const savedId = Pref.get('last_id',''), savedName = Pref.get('last_name','');
+  const idEl = document.getElementById('login-id'), rem = document.getElementById('login-rem'), fld = document.getElementById('login-id-field'), sub = document.getElementById('login-sub');
+  if (fromLink) { idEl.value = fromLink; rem.classList.add('hidden'); fld.classList.remove('hidden'); if (sub) sub.textContent = '초대 링크로 오셨어요. 받으신 PIN을 입력하세요'; state.firstLogin = true; setTimeout(()=>document.getElementById('login-pin').focus(), 80); return; }
+  if (savedId) { idEl.value = savedId; rem.classList.remove('hidden'); fld.classList.add('hidden'); document.getElementById('login-rem-name').textContent = `${savedName||'직원'}님 (사번 ${savedId})`; if (sub) sub.textContent = 'PIN만 입력하면 됩니다'; setTimeout(()=>document.getElementById('login-pin').focus(), 80); return; }
+  rem.classList.add('hidden'); fld.classList.remove('hidden'); if (sub) sub.textContent = state.settings.loginSub || DEFAULT_SETTINGS.loginSub;
+}
+function forgetLoginId() { Pref.set('last_id',null); Pref.set('last_name',null); document.getElementById('login-id').value=''; document.getElementById('login-pin').value=''; prepLogin(); document.getElementById('login-id').focus(); }
+function openSheet(html) { document.getElementById('sheet-body').innerHTML = html; document.getElementById('sheet-overlay').classList.add('active'); }
+function closeSheet() { document.getElementById('sheet-overlay').classList.remove('active'); }
+function confirmDlg(ico, title, msg, buttons) {
+  document.getElementById('dlg-ico').textContent = ico; document.getElementById('dlg-title').textContent = title; document.getElementById('dlg-msg').textContent = msg;
+  window._dlgBtns = buttons;
+  document.getElementById('dlg-btns').innerHTML = buttons.map((b,i)=>`<button class="btn ${b.cls||'btn-ghost'}" onclick="_dlgClick(${i})">${esc(b.label)}</button>`).join('');
+  document.getElementById('dialog-wrap').classList.add('active');
+}
+function _dlgClick(i) { const b = window._dlgBtns[i]; document.getElementById('dialog-wrap').classList.remove('active'); if (b.fn) b.fn(); }
+function closeDlg() { document.getElementById('dialog-wrap').classList.remove('active'); }
+function toast(msg, type='') { const el=document.createElement('div'); el.className='toast '+type; el.innerHTML=`<span></span><span>${esc(msg)}</span>`; document.getElementById('toasts').appendChild(el); setTimeout(()=>{ el.style.transition='opacity .3s'; el.style.opacity='0'; setTimeout(()=>el.remove(),300); }, 2800); }
+function loadingHtml() { return '<div class="loading"><div class="spin dark"></div></div>'; }
+function errorHtml(e, retry) { return `<div class="empty"><div class="ico"></div><p style="color:var(--danger);font-weight:700;">문제가 생겼습니다</p><p class="tiny muted mt8">${esc(e.message||e)}</p><button class="btn btn-ghost btn-sm mt12" onclick="${retry}">다시 시도</button></div>`; }
+document.getElementById('sheet-overlay').addEventListener('click', e => { if (e.target.id==='sheet-overlay') closeSheet(); });
+document.getElementById('dialog-wrap').addEventListener('click', e => { if (e.target.id==='dialog-wrap') closeDlg(); });
+
+// ===== 인증 / 세션 =====
+async function doLogin() {
+  const empId = document.getElementById('login-id').value.trim(), pin = document.getElementById('login-pin').value.trim();
+  if (!empId||!pin) { toast('사번과 PIN을 입력하세요','err'); return; }
+  const btn = document.getElementById('login-btn'); btn.innerHTML='<span class="spin"></span>'; btn.disabled=true;
+  state.loggingIn = true;   // 로그인 진행 중 표시 — onAuth 콜백이 끼어들어 signOut하지 않게
+  try {
+    const u = await DATA.signIn(empId, pin);
+    state.user = u; Pref.set('session', JSON.stringify({ id:u.id, empId, ts:Date.now() }));
+    Pref.set('last_id', empId); Pref.set('last_name', u.name||'');   // 다음부턴 PIN만
+    if (location.search.includes('e=')) { try { history.replaceState(null, '', location.pathname); } catch{} }
+    await loadSettings(); routeUser(); toast(`${u.name}님, 반갑습니다`, 'ok');
+    if (state.firstLogin && u.role==='employee') { state.firstLogin = false; setTimeout(()=>openChangePin(true), 900); }
+  } catch(e) {
+    if (['auth/user-not-found','auth/wrong-password','auth/invalid-credential','auth/invalid-login-credentials'].includes(e.code)) toast('사번 또는 PIN이 올바르지 않습니다','err');
+    else if (e.code==='auth/too-many-requests') toast('틀린 시도가 많아 잠시 잠겼습니다. 몇 분 뒤 다시 해주세요','err');
+    else if (e.code==='auth/network-request-failed') toast('인터넷 연결을 확인해 주세요','err');
+    else toast(e.message||'로그인 실패','err');
+  } finally { state.loggingIn = false; btn.innerHTML='로그인'; btn.disabled=false; }
+}
+function doLogout() {
+  confirmDlg('','로그아웃','로그아웃 하시겠습니까?',[{label:'취소'},{label:'로그아웃',cls:'btn-danger',fn:async()=>{ await DATA.signOut(); Pref.set('session',null); state.user=null; document.getElementById('login-id').value=''; document.getElementById('login-pin').value=''; showView('login'); }}]);
+}
+async function loadSettings() { try { const s = await DATA.getSettings(); state.settings = { ...DEFAULT_SETTINGS, ...s }; } catch(e) {} applyTheme(); }
+function routeUser() {
+  const u = state.user, isAdmin = u.role==='superadmin'||u.role==='admin';
+  document.getElementById('emp-name').textContent = `${u.name} · ${u.dept||''}`;
+  document.getElementById('adm-name').textContent = u.name;
+  if (isAdmin) { document.getElementById('adm-role').textContent = u.role==='superadmin'?'대표':'관리자'; document.getElementById('anav-settings').style.display = u.role==='superadmin'?'':'none'; showView('admin'); admTab('dash'); }
+  else { showView('emp'); empTab('today'); }
+  setTimeout(showInstallBanner, 2500);
+}
+async function restoreSession() {
+  try { const cached = Pref.get('logo',''); if (cached) applyLogo(cached); } catch {}
+  try { await DATA.init(); } catch(e) { toast('서버 연결 실패: '+e.message,'err'); showView('login'); return; }
+  if (!DEMO) { try { const d = await db.collection('settings').doc('logo').get(); if (d.exists) { const v=d.data().logo||d.data().logoData; if (v) { state.settings.logo=v; applyLogo(v); Pref.set('logo',v); } } } catch {} }
+  DATA.onAuth(async (fbUser) => {
+    // 로그인 진행 중(doLogin)에 발화한 것이면 건드리지 않는다. 여기서 signOut하면 진행 중인 Firestore 조회의 토큰이 무효가 되어 permission-denied가 난다(7월판 주석에 남아 있던 문제, v2.0~2.1에서 되살아났던 것 — 2026-11-09 수정)
+    if (state.user || state.loggingIn) return;
+    const sess = JSON.parse(Pref.get('session','null')||'null');
+    const expired = !!sess && (Date.now()-(sess.ts||0)) > SESSION_DAYS*86400000;
+    if (!fbUser || !sess || expired) { if (fbUser && !DEMO && expired) { try { await auth.signOut(); } catch{} } Pref.set('session',null); showView('login'); return; }
+    try { await loadSettings(); const u = await DATA.getEmployeeById(sess.id); if (!u || u.active===false) { await DATA.signOut(); Pref.set('session',null); showView('login'); return; } state.user = u; routeUser(); }
+    catch(e) { showView('login'); }
+  });
+}
+['login-id','login-pin'].forEach(id => document.getElementById(id).addEventListener('keydown', e => { if (e.key==='Enter') doLogin(); }));
+</script>
+<script>
+// =====================================================================
+//  직원 화면
+// =====================================================================
+let _clk = null;
+function stopClock() { if (_clk) { clearInterval(_clk); _clk = null; } }
+function empTab(tab) { state.empTab = tab; ['today','history','me'].forEach(t => document.getElementById('enav-'+t).classList.toggle('active', t===tab)); renderEmp(); }
+async function renderEmp() {
+  const el = document.getElementById('emp-content'); stopClock(); el.innerHTML = loadingHtml(); window.scrollTo(0,0);
+  try { if (state.empTab==='today') await renderEmpToday(el); else if (state.empTab==='history') await renderEmpHistory(el); else renderEmpMe(el); }
+  catch(e) { console.error(e); el.innerHTML = errorHtml(e, 'renderEmp()'); }
+}
+function typeLabel(t) { return t==='special' ? '특근' : '야근'; }
+function recTimeStr(r) { return r.type==='special' ? `${r.startTime} ~ ${r.endTime}${r.breakMinutes?` (휴게 ${r.breakMinutes}분)`:''}` : `${r.workEndTime||state.settings.workEnd} → ${r.actualEndTime}`; }
+function previewHtml(c, kind) {
+  if (!c.minutes) return `<div class="hero-preview"><span>${kind==='special'?'근무 시간을 입력하세요':'아직 정규 퇴근 시간 전입니다'}</span></div>`;
+  return `<div class="hero-preview"><span>${kind==='special'?'특근 시간':'예상 야근'}${c.night?` · 야간 ${fmtMin(c.night)}`:''}</span><b>${fmtMin(c.minutes)}</b></div>`;
+}
+
+async function renderEmpToday(el) {
+  const s = state.settings, today = todayStr(), month = today.slice(0,7);
+  const records = await DATA.listRecords({ empId: state.user.employeeId, month });
+  const early = toMin(nowHM()) <= 360 && toMin(nowHM()) < toMin(s.workEnd);   // 06:00 이전 = 전날 야근이 이어지는 중
+  const baseDate = early ? yesterdayStr() : today;   // 매월 1일 새벽이면 전날은 전월 → 그 달 기록을 따로 읽는다
+  const todays = (baseDate.slice(0,7)===month ? records : await DATA.listRecords({ empId: state.user.employeeId, month: baseDate.slice(0,7) })).filter(r => r.date===baseDate);
+  const bd = new Date(baseDate+'T00:00:00'), weekend = bd.getDay()===0 || bd.getDay()===6;
+  // 유형은 요일로 자동(토·일 = 특근, 평일 = 야근). 직원이 아래 링크로 바꾸면 그 선택을 따른다
+  if (!state.empTypeManual) state.empType = weekend ? 'special' : 'overtime';
+  const isSp = state.empType==='special';
+  const existing = todays.find(r => (r.type||'overtime') === (isSp?'special':'overtime'));
+  const otherDone = todays.find(r => (r.type||'overtime') === (isSp?'overtime':'special'));
+  const sum = summarize(records);
+  let inner = '';
+  if (existing) {
+    const c = recCalc(existing);
+    inner = `<div class="hero-done">
+      <div class="row"><span>${early?'어제':'오늘'} ${isSp?'특근':'야근'} 기록 완료</span><span>${esc(recTimeStr(existing))}</span></div>
+      <div class="row"><span>${isSp?'특근 시간':'야근 시간'}</span><span class="big">${fmtMin(c.minutes)}</span></div>
+      ${existing.note?`<div class="row"><span style="opacity:.85">${esc(existing.note)}</span></div>`:''}
+    </div>
+    ${s.allowSelfEdit?`<button class="btn-hero ${isSp?'special':''}" style="margin-top:10px;padding:13px;" onclick="openRecordDetail('${existing.id}')">시간이 틀렸어요 · 수정</button>`:''}`;
+  } else if (isSp) {
+    inner = `<div style="font-size:12px;opacity:.85;margin-bottom:8px;font-weight:700;text-align:center;">${weekend?'주말·휴일 근무는 특근으로 기록합니다':'특근으로 기록합니다'} · 시작~종료 시각만 맞추고 저장</div>
+      <div class="hero-input-row">
+        <input type="time" id="sp-start" value="${s.workStart||'09:00'}">
+        <span style="font-weight:900;opacity:.8;">~</span>
+        <input type="time" id="sp-end" value="${nowHM()}">
+      </div>
+      <div style="display:flex;gap:8px;margin-top:8px;align-items:center;">
+        <span style="font-size:12px;opacity:.85;font-weight:700;">휴게(분)</span>
+        <input type="number" id="sp-break" inputmode="numeric" value="0" style="background:rgba(255,255,255,.95);color:#0F172A;border:none;border-radius:10px;padding:8px;width:80px;text-align:center;font-weight:800;">
+        <button class="btn btn-xs" onclick="document.getElementById('sp-end').value=nowHM();spPreview()">종료 = 지금</button>
+      </div>
+      <div id="sp-preview">${previewHtml({minutes:0},'special')}</div>
+      <button class="btn-hero special" style="margin-top:10px;" onclick="empSaveSpecial()">특근 기록 저장</button>
+      <div style="font-size:11px;opacity:.75;margin-top:8px;text-align:center;">4시간 이상이면 휴게 30분, 8시간 이상이면 60분이 자동으로 들어가며 직접 고칠 수 있습니다.</div>`;
+  } else {
+    const c = calcOvertime(s.workEnd, nowHM());
+    inner = `<div class="hero-clock" id="hero-clock">${nowHM()}</div><div class="hero-clock-sub">지금 시각 · 정규 퇴근 ${s.workEnd}${early?' · 새벽 퇴근은 전날 근무로 기록됩니다':''}</div>
+      <button class="btn-hero" id="btn-now" onclick="empSaveNow()">지금 퇴근 기록</button>
+      <div id="ot-preview">${previewHtml(c,'overtime')}</div>
+      <div style="font-size:11px;opacity:.75;margin-top:8px;text-align:center;">퇴근할 때 이 버튼 한 번이면 끝. 정규 퇴근 전에는 저장되지 않습니다.</div>`;
+  }
+  el.innerHTML = `
+    <div class="hero">
+      <div class="hero-date">${bd.getFullYear()}년 ${bd.getMonth()+1}월 ${bd.getDate()}일 (${WEEKDAYS[bd.getDay()]})${early?' · 어제 근무 이어서':''}</div>
+      <div class="hero-title">${isSp?'특근 기록':'야근 기록'}</div>
+      ${inner}
+      <div style="display:flex;justify-content:center;gap:16px;margin-top:12px;flex-wrap:wrap;">
+        <a class="hero-link" onclick="openManualRecord()">다른 시간·지난 날짜로 기록 ›</a>
+        ${otherDone ? '' : `<a class="hero-link" onclick="empSetType('${isSp?'overtime':'special'}')">${isSp?'야근으로 기록하기':'특근으로 기록하기'}</a>`}
+      </div>
+    </div>
+    ${s.noticeText?`<div class="notice info">${esc(s.noticeText)}</div>`:''}
+    <div class="sec-title">${monthLabel(month)} 합계</div>
+    <div class="stats" style="grid-template-columns:1fr 1fr;">
+      <div class="stat accent"><div class="k">야근</div><div class="v">${fmtMin(sum.ot)}</div><div class="s">${sum.otDays}일</div></div>
+      <div class="stat special"><div class="k">특근</div><div class="v">${fmtMin(sum.sp)}</div><div class="s">${sum.spDays}일</div></div>
+    </div>
+    ${sum.night?`<div class="tiny muted" style="margin:-6px 0 12px 4px;">이 중 야간(22~06시) ${fmtMin(sum.night)} · 법 기준 참고용으로 따로 셉니다</div>`:''}
+    ${weekWarnHtml(records)}
+    <div class="sec-title">최근 기록</div>
+    ${records.length ? `<div class="list">${records.slice(0,4).map(r=>recordRowHtml(r)).join('')}</div><button class="btn btn-soft btn-full btn-sm" onclick="empTab('history')">이달 기록 전부 보기 →</button>` : `<div class="empty"><div class="ico"></div><p>이번 달 기록이 아직 없습니다</p></div>`}`;
+  if (!existing && !isSp) {
+    _clk = setInterval(() => { const t = nowHM(); const hc=document.getElementById('hero-clock'); if (hc) hc.textContent=t; const p=document.getElementById('ot-preview'); if (p) p.innerHTML = previewHtml(calcOvertime(state.settings.workEnd, t),'overtime'); }, 15000);
+  }
+  if (!existing && isSp) { ['sp-start','sp-end'].forEach(id => document.getElementById(id).addEventListener('input', () => { autoBreakFill(); spPreview(); })); document.getElementById('sp-break').addEventListener('input', spPreview); autoBreakFill(); spPreview(); }
+}
+function weekWarnHtml(records) {
+  if (!state.settings.weeklyLimitWarn) return '';
+  const w = weeklyOvertime(records); const over = Object.entries(w).filter(([k,v]) => v > 720);
+  if (!over.length) return '';
+  return `<div class="notice danger">주 12시간 연장근로 한도를 넘긴 주가 있습니다: ${over.map(([k,v])=>`${k.slice(5)}주 ${fmtMin(v)}`).join(', ')} (근로기준법 제53조)</div>`;
+}
+function empSetType(t) { state.empType = t; state.empTypeManual = true; renderEmp(); }
+function autoBreakFill() { const st=document.getElementById('sp-start')?.value, en=document.getElementById('sp-end')?.value, b=document.getElementById('sp-break'); if (!st||!en||!b||b.dataset.touched) return; const g = calcSpecial(st,en,0).gross; b.value = autoBreak(g); }
+function spPreview() { const st=document.getElementById('sp-start')?.value, en=document.getElementById('sp-end')?.value, b=parseInt(document.getElementById('sp-break')?.value||'0',10)||0; const p=document.getElementById('sp-preview'); if (!p||!st||!en) return; p.innerHTML = previewHtml(calcSpecial(st,en,b),'special'); }
+document.addEventListener('input', e => { if (e.target && e.target.id==='sp-break') e.target.dataset.touched='1'; });
+
+// ---- 저장 ----
+function baseRecord(type, date, note) { return { employeeId: state.user.employeeId, employeeName: state.user.name, date, month: date.slice(0,7), type, note: note||'', createdBy: state.user.employeeId, editCount: 0 }; }
+function yesterdayStr() { const d=new Date(); d.setDate(d.getDate()-1); return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`; }
+// 새벽(06:00 이전) 퇴근은 "전날 근무"로 기록한다 (자정 넘긴 야근의 날짜가 다음날로 잡히는 문제 방지)
+function otDateFor(endHM) { const w = toMin(state.settings.workEnd), a = toMin(endHM); return (a < w && a <= 360) ? yesterdayStr() : todayStr(); }
+async function createRecord(rec, reason) {
+  const dup = (await DATA.listRecords({ empId: state.user.employeeId, month: rec.date.slice(0,7) })).find(r => r.date===rec.date && (r.type||'overtime')===rec.type);
+  if (dup) { toast('같은 날짜에 이미 기록이 있습니다. 기존 기록을 수정하세요','warn'); return null; }
+  const id = await DATA.addRecord(rec);
+  await writeAudit('create', id, null, rec, reason || '신규 등록');
+  return id;
+}
+async function empSaveNow() {
+  const t = nowHM(), c = calcOvertime(state.settings.workEnd, t);
+  if (c.minutes <= 0) { toast(`지금(${t})은 정규 퇴근 시간(${state.settings.workEnd}) 전입니다`,'err'); return; }
+  const btn = document.getElementById('btn-now'); btn.disabled = true; btn.textContent = '저장 중...';
+  try { const dt = otDateFor(t); const id = await createRecord({ ...baseRecord('overtime', dt), workEndTime: state.settings.workEnd, actualEndTime: t, overtimeMinutes: c.minutes, nightMinutes: c.night }, '퇴근 버튼으로 기록'); if (id) toast(`야근 ${fmtMin(c.minutes)} 저장 완료${dt!==todayStr()?' (전날 '+dateInfo(dt).label+' 근무로 기록)':''}`,'ok'); renderEmp(); }
+  catch(e) { toast('저장 실패: '+e.message,'err'); btn.disabled=false; btn.textContent='지금 시간으로 퇴근 기록'; }
+}
+async function empSaveSpecial() {
+  const st=document.getElementById('sp-start').value, en=document.getElementById('sp-end').value, b=parseInt(document.getElementById('sp-break').value||'0',10)||0;
+  if (!st||!en) { toast('시작·종료 시간을 입력하세요','err'); return; }
+  const c = calcSpecial(st,en,b); if (c.minutes<=0) { toast('근무 시간이 0분입니다','err'); return; }
+  try { const id = await createRecord({ ...baseRecord('special', todayStr()), startTime: st, endTime: en, breakMinutes: b, specialMinutes: c.minutes, nightMinutes: c.night }, '특근 입력'); if (id) toast(`특근 ${fmtMin(c.minutes)} 저장 완료`,'ok'); renderEmp(); } catch(e) { toast('저장 실패: '+e.message,'err'); }
+}
+
+// ---- 다른 시간·지난 날짜로 기록 (옛 "직접 입력하기" + "빠뜨린 날짜 추가"를 한 창으로, 2026-11-09) ----
+// 추가할 수 있는 가장 이른 날짜: 당월 1일. 전월은 전월 1차 PDF(5일)를 저장하기 전까지만 (설정으로 끌 수 있음). 최근 N일 제한이 있으면 그 안에서.
+function pastMinDate() {
+  const today = todayStr(), month = today.slice(0,7), s = state.settings, pm = prevMonthStr(month);
+  let min = (s.allowPrevMonth !== false && !state.pdfLog[pdfKey(pm,1)]) ? pm+'-01' : month+'-01';
+  if (s.pastDaysLimit > 0) { const d=new Date(); d.setDate(d.getDate()-s.pastDaysLimit); const lim = `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`; if (lim > min) min = lim; }
+  return min;
+}
+function openManualRecord(presetDate) {
+  const today = todayStr(), minDate = pastMinDate(), s = state.settings;
+  window._pastType = state.empType || 'overtime';
+  openSheet(`<div class="sheet-title">다른 시간·지난 날짜로 기록</div><div class="sheet-sub">${dateInfo(minDate).label} ~ 오늘 사이 날짜만 됩니다. 오늘이 아닌 날짜는 사유를 적어야 하고, 사유는 이력에 남습니다.</div>
+    <div class="field"><label>날짜</label><input type="date" id="pr-date" min="${minDate}" max="${today}" value="${presetDate||today}" onchange="prDateChanged()"></div>
+    <div class="filters"><button class="pill ${window._pastType==='overtime'?'on':''}" id="pt-ot" onclick="pastType('overtime')">야근 (평일 퇴근이 늦음)</button><button class="pill ${window._pastType==='special'?'on special':''}" id="pt-sp" onclick="pastType('special')">특근 (주말·휴일 근무)</button></div>
+    <div id="pr-ot" class="${window._pastType==='overtime'?'':'hidden'}"><div class="field"><label>실제 퇴근 시간 (정규 퇴근 ${s.workEnd})</label><input type="time" id="pr-end" value="${s.workEnd}"></div></div>
+    <div id="pr-sp" class="${window._pastType==='special'?'':'hidden'}"><div class="grid2"><div class="field"><label>시작</label><input type="time" id="pr-st" value="${s.workStart||'09:00'}"></div><div class="field"><label>종료</label><input type="time" id="pr-en" value="18:00"></div></div><div class="field"><label>휴게(분)</label><input type="number" id="pr-break" inputmode="numeric" value="60"></div></div>
+    <div class="field"><label>메모 (선택)</label><input id="pr-note" placeholder="예: 벤츠 풀랩 마무리"></div>
+    <div class="field"><label id="pr-reason-label">사유</label><input id="pr-reason" placeholder="예: 퇴근할 때 버튼을 깜빡함"></div>
+    <div class="sheet-foot"><button class="btn btn-ghost" onclick="closeSheet()">취소</button><button class="btn btn-primary" onclick="submitPast()">저장</button></div>`);
+  prDateChanged();
+}
+function prDateChanged() { const d = document.getElementById('pr-date')?.value, lab = document.getElementById('pr-reason-label'), inp = document.getElementById('pr-reason'); if (!lab) return; const past = !!d && d !== todayStr(); lab.innerHTML = past ? '사유 <span style="color:var(--danger)">* 지난 날짜는 꼭 적어 주세요</span>' : '사유 (선택)'; inp.placeholder = past ? '예: 퇴근할 때 버튼을 깜빡함' : '예: 버튼을 못 눌러 직접 입력'; }
+function openPastRecord() { openManualRecord(); }
+function pastType(t) { window._pastType = t; document.getElementById('pt-ot').classList.toggle('on', t==='overtime'); document.getElementById('pt-sp').classList.toggle('on', t==='special'); document.getElementById('pt-sp').classList.toggle('special', t==='special'); document.getElementById('pr-ot').classList.toggle('hidden', t!=='overtime'); document.getElementById('pr-sp').classList.toggle('hidden', t!=='special'); }
+async function submitPast() {
+  const date=document.getElementById('pr-date').value, note=document.getElementById('pr-note').value.trim(), reason=document.getElementById('pr-reason').value.trim();
+  if (!date) { toast('날짜를 선택하세요','err'); return; }
+  const past = date !== todayStr();
+  if (past && !reason) { toast('지난 날짜는 사유를 적어 주세요','err'); return; }
+  if (date > todayStr() || date < pastMinDate()) { toast(`${dateInfo(pastMinDate()).label} ~ 오늘 사이의 날짜만 추가할 수 있습니다`,'err'); return; }
+  let rec;
+  if (window._pastType==='special') { const st=document.getElementById('pr-st').value, en=document.getElementById('pr-en').value, b=parseInt(document.getElementById('pr-break').value||'0',10)||0; if(!st||!en){toast('시간을 입력하세요','err');return;} const c=calcSpecial(st,en,b); if(c.minutes<=0){toast('근무 시간이 0분입니다','err');return;} rec={ ...baseRecord('special',date,note), startTime:st, endTime:en, breakMinutes:b, specialMinutes:c.minutes, nightMinutes:c.night }; }
+  else { const t=document.getElementById('pr-end').value; if(!t){toast('퇴근 시간을 입력하세요','err');return;} const c=calcOvertime(state.settings.workEnd,t); if(c.minutes<=0){toast('정규 퇴근 시간 이전입니다','err');return;} rec={ ...baseRecord('overtime',date,note), workEndTime:state.settings.workEnd, actualEndTime:t, overtimeMinutes:c.minutes, nightMinutes:c.night }; }
+  try { const id = await createRecord(rec, past ? `지난 날짜 추가: ${reason}` : (reason ? `직접 입력: ${reason}` : '직접 입력')); if (id) { closeSheet(); toast('기록이 저장되었습니다','ok'); renderEmp(); } } catch(e) { toast('실패: '+e.message,'err'); }
+}
+
+// ---- 기록 목록 ----
+function recordRowHtml(r, showName, sel) {
+  const i = dateInfo(r.date), c = recCalc(r), sp = r.type==='special';
+  const on = sel && state.empSel.has(r.id);
+  return `<div class="row tap" onclick="${sel?`toggleSel('${r.id}')`:`openRecordDetail('${r.id}')`}">${sel?`<div class="ckbox ${on?'on':''}"></div>`:''}
+    <div class="daybox ${i.weekend?'weekend':''}"><div class="d">${i.day}</div><div class="w">${i.wd}</div></div>
+    <div class="row-body"><div class="row-title">${showName?esc(r.employeeName)+' ':''}<span class="chip ${sp?'chip-special':'chip-accent'}">${sp?'특근':'야근'}</span>${c.night?`<span class="chip chip-night">야간 ${fmtMin(c.night)}</span>`:''}${r.editCount?`<span class="chip chip-warn">수정 ${r.editCount}</span>`:''}${r.source==='import'?`<span class="chip chip-gray">과거 입력</span>`:''}</div>
+      <div class="row-sub">${esc(recTimeStr(r))}</div>${r.note?`<div class="row-note">${esc(r.note)}</div>`:''}</div>
+    <div class="row-right"><div class="dur ${sp?'special':''}">${fmtMin(c.minutes)}</div><span class="tiny muted">›</span></div></div>`;
+}
+async function renderEmpHistory(el) {
+  const month = state.empMonth, all = await DATA.listRecords({ empId: state.user.employeeId, month });
+  const f = state.empFilter, records = f==='all' ? all : all.filter(r => (r.type||'overtime')===f);
+  const sum = summarize(all), s = state.settings, sel = state.empSelect && s.allowSelfEdit;
+  if (sel) { const ids = new Set(records.map(r=>r.id)); state.empSel.forEach(id => { if (!ids.has(id)) state.empSel.delete(id); }); }
+  el.innerHTML = `<div class="monthbar"><button onclick="empMonth(-1)">‹</button><span class="m">${monthLabel(month)}</span><button onclick="empMonth(1)">›</button></div>
+    <div class="card"><div class="card-title">이달 합계 <span class="chip chip-gray">${all.length}건</span></div>
+      <div class="stats" style="margin-bottom:6px;"><div class="stat accent"><div class="k">야근</div><div class="v">${fmtMin(sum.ot)}</div><div class="s">${sum.otDays}일</div></div><div class="stat special"><div class="k">특근</div><div class="v">${fmtMin(sum.sp)}</div><div class="s">${sum.spDays}일</div></div><div class="stat night"><div class="k">야간</div><div class="v">${fmtMin(sum.night)}</div><div class="s">22~06시</div></div></div>
+      <div class="kv"><span>총 근무(야근+특근)</span><b>${fmtMin(sum.total)} (${fmtH(sum.total)}h)</b></div>
+      ${s.showPremium?`<div class="kv"><span>가산 환산시간 (참고)</span><b>${sum.premium.toFixed(2)}h</b></div>`:''}
+      ${sum.edits?`<div class="kv"><span>수정 횟수</span><b>${sum.edits}회 (이력 보관)</b></div>`:''}
+    </div>
+    ${weekWarnHtml(all)}
+    <div class="filters">${[['all','전체'],['overtime','야근'],['special','특근']].map(([k,l])=>`<button class="pill ${f===k?'on':''} ${k==='special'?'special':''}" onclick="state.empFilter='${k}';renderEmp()">${l}</button>`).join('')}<span style="margin-left:auto;display:flex;gap:6px;">${s.allowSelfEdit&&all.length?`<button class="pill ${sel?'on':''}" onclick="toggleSelectMode()">${sel?'선택 끝':'선택'}</button>`:''}<button class="pill" onclick="openPastRecord()">＋ 추가</button></span></div>
+    ${sel?`<div class="tiny muted" style="margin:-4px 4px 8px;">지울 기록을 누르세요. 여러 개를 한 번에 지울 수 있고, 사유 하나가 모든 기록의 이력에 남습니다.</div>`:''}
+    ${records.length?`<div class="list">${records.map(r=>recordRowHtml(r,false,sel)).join('')}</div>`:`<div class="empty"><div class="ico"></div><p>기록이 없습니다</p></div>`}
+    ${sel?`<div class="selbar"><div class="selbar-inner"><span class="n">${state.empSel.size}개 선택</span><button onclick="selectAllVisible()">${state.empSel.size===records.length&&records.length?'전체 해제':'전체 선택'}</button><button class="del" onclick="deleteSelected()" ${state.empSel.size?'':'disabled'}>삭제</button></div></div>`:''}`;
+}
+// ---- 기록 선택 삭제 (2026-11-09 이사장: 하나씩 말고 전체·선택 삭제) — 직원 본인 기록만, 사유 필수, 건마다 이력 ----
+function toggleSelectMode() { state.empSelect = !state.empSelect; state.empSel = new Set(); renderEmp(); }
+function toggleSel(id) { if (state.empSel.has(id)) state.empSel.delete(id); else state.empSel.add(id); renderEmp(); }
+async function selectAllVisible() {
+  const all = await DATA.listRecords({ empId: state.user.employeeId, month: state.empMonth });
+  const f = state.empFilter, records = f==='all' ? all : all.filter(r => (r.type||'overtime')===f);
+  if (state.empSel.size === records.length) state.empSel = new Set(); else state.empSel = new Set(records.map(r=>r.id));
+  renderEmp();
+}
+function deleteSelected() {
+  const n = state.empSel.size; if (!n) return;
+  openSheet(`<div class="sheet-title">기록 ${n}개 삭제</div><div class="sheet-sub">${monthLabel(state.empMonth)} 기록 ${n}개를 지웁니다. 지운 내용은 건마다 이력에 영구 보관되고 대표가 볼 수 있습니다.</div>
+    <div class="field"><label>삭제 사유 <span style="color:var(--danger)">*</span></label><input id="bdel-reason" placeholder="예: 잘못 입력한 달이라 정리"></div>
+    <div class="sheet-foot"><button class="btn btn-ghost" onclick="closeSheet()">취소</button><button class="btn btn-danger" id="bdel-btn" onclick="submitDeleteSelected()">${n}개 삭제</button></div>`);
+}
+async function submitDeleteSelected() {
+  const reason = document.getElementById('bdel-reason').value.trim(); if (!reason) { toast('삭제 사유를 입력하세요','err'); return; }
+  const btn = document.getElementById('bdel-btn'); btn.disabled = true; btn.innerHTML = '<span class="spin"></span>';
+  try {
+    const ids = [...state.empSel];
+    const all = await DATA.listRecords({ empId: state.user.employeeId, month: state.empMonth });
+    const recs = all.filter(r => ids.includes(r.id) && r.employeeId === state.user.employeeId);   // 내 기록만
+    if (!recs.length) { toast('지울 기록이 없습니다','warn'); closeSheet(); return; }
+    await DATA.deleteRecords(recs.map(r=>r.id));
+    await DATA.addAudits(recs.map(r => ({ action:'delete', recordId:r.id, before:r, after:null, reason:`선택 삭제(${recs.length}개): ${reason}`, modifiedBy:state.user.employeeId, modifiedByName:state.user.name, modifiedByRole:state.user.role, targetEmployee:r.employeeId, targetEmployeeName:r.employeeName, targetDate:r.date })));
+    state.empSelect = false; state.empSel = new Set(); closeSheet(); toast(`${recs.length}개 삭제됨 (이력 보관)`,'ok'); renderEmp();
+  } catch(e) { toast('실패: '+e.message,'err'); btn.disabled=false; btn.textContent='삭제'; }
+}
+function empMonth(dir) { state.empMonth = shiftMonth(state.empMonth, dir); renderEmp(); }
+
+// ---- 기록 상세 / 수정 / 삭제 ----
+async function openRecordDetail(id) {
+  openSheet(loadingHtml());
+  try {
+    const r = await DATA.getRecord(id); if (!r) { closeSheet(); toast('기록을 찾을 수 없습니다','err'); return; }
+    const c = recCalc(r), i = dateInfo(r.date), sp = r.type==='special';
+    const isMine = state.user.role==='employee' && state.user.employeeId===r.employeeId;
+    const canEdit = isMine && state.settings.allowSelfEdit;
+    const hist = await DATA.listAudit({ recordId: id });
+    openSheet(`<div class="sheet-title">${esc(r.employeeName)} · ${i.label} <span class="chip ${sp?'chip-special':'chip-accent'}">${sp?'특근':'야근'}</span></div>
+      <div class="sheet-sub">${esc(recTimeStr(r))}</div>
+      <div class="card" style="margin-bottom:12px;">
+        <div class="kv"><span>${sp?'특근 시간':'야근 시간'}</span><b>${fmtMin(c.minutes)}</b></div>
+        <div class="kv"><span>야간(22~06) 포함</span><b>${fmtMin(c.night)}</b></div>
+        ${r.note?`<div class="kv"><span>메모</span><b style="text-align:right;max-width:65%;font-weight:600;">${esc(r.note)}</b></div>`:''}
+        <div class="kv"><span>등록</span><b>${esc(r.createdBy||r.employeeId)} · ${fmtDT(r.createdAt)}</b></div>
+        ${r.editCount?`<div class="kv"><span>수정</span><b>${r.editCount}회 · 최근 ${fmtDT(r.updatedAt)}</b></div>`:''}
+      </div>
+      ${canEdit?`<div class="grid2"><button class="btn btn-primary" onclick="openEditRecord('${id}')">수정</button><button class="btn btn-danger-soft" onclick="openDeleteRecord('${id}')">삭제</button></div>`:(state.user.role!=='employee'?`<div class="notice info">대표/관리자는 기록을 열람만 할 수 있습니다. 수정·삭제는 직원 본인만 가능합니다.</div>`:'')}
+      <div class="sec-title">수정 이력 (${hist.length})</div>
+      ${histHtml(hist)}
+      <div class="sheet-foot"><button class="btn btn-ghost" onclick="closeSheet()">닫기</button></div>`);
+  } catch(e) { openSheet(errorHtml(e, `openRecordDetail('${id}')`)); }
+}
+function histHtml(hist) {
+  if (!hist.length) return '<div class="empty" style="padding:16px;"><p class="tiny">수정 이력이 없습니다</p></div>';
+  const lab = {create:'등록',update:'수정',delete:'삭제',pin_reset:'PIN 초기화',pdf:'PDF 저장',import:'과거 기록 가져오기',import_undo:'↩ 가져오기 취소'};
+  return `<div class="hist">${hist.map(h => `<div class="hist-item"><div class="when">${fmtDT(h.timestamp)} · ${esc(h.modifiedByName||h.modifiedBy)} (${h.modifiedByRole==='employee'?'직원':h.modifiedByRole==='superadmin'?'대표':'관리자'})</div><div class="what">${lab[h.action]||h.action}</div>${diffHtml(h)}${h.reason?`<div class="why">사유: ${esc(h.reason)}</div>`:''}</div>`).join('')}</div>`;
+}
+function diffHtml(h) {
+  const b=h.before, a=h.after; if (!b||!a) return '';
+  const parts=[];
+  if (b.type==='special'||a.type==='special') { if (b.startTime!==a.startTime||b.endTime!==a.endTime) parts.push(`${b.startTime}~${b.endTime} → ${a.startTime}~${a.endTime}`); if ((b.breakMinutes||0)!==(a.breakMinutes||0)) parts.push(`휴게 ${b.breakMinutes||0}분 → ${a.breakMinutes||0}분`); }
+  else if (b.actualEndTime!==a.actualEndTime) parts.push(`퇴근 ${b.actualEndTime} → ${a.actualEndTime}`);
+  if ((b.note||'')!==(a.note||'')) parts.push(`메모 "${esc(b.note||'')}" → "${esc(a.note||'')}"`);
+  return parts.length ? `<div class="chg">${parts.join(' · ')}</div>` : '';
+}
+async function openEditRecord(id) {
+  const r = await DATA.getRecord(id); if (!r) return; const sp = r.type==='special';
+  openSheet(`<div class="sheet-title">기록 수정</div><div class="sheet-sub">${dateInfo(r.date).label} · 변경 전/후와 사유가 이력에 영구 보관됩니다.</div>
+    ${sp?`<div class="grid2"><div class="field"><label>시작</label><input type="time" id="ed-st" value="${r.startTime}"></div><div class="field"><label>종료</label><input type="time" id="ed-en" value="${r.endTime}"></div></div><div class="field"><label>휴게(분)</label><input type="number" id="ed-break" inputmode="numeric" value="${r.breakMinutes||0}"></div>`
+        :`<div class="field"><label>실제 퇴근 시간 (정규 퇴근 ${r.workEndTime||state.settings.workEnd})</label><input type="time" id="ed-end" value="${r.actualEndTime}"></div>`}
+    <div class="field"><label>메모</label><input id="ed-note" value="${esc(r.note||'')}"></div>
+    <div class="field"><label>수정 사유 <span style="color:var(--danger)">*</span></label><input id="ed-reason" placeholder="예: 퇴근 버튼을 잘못 눌러 시간 정정"></div>
+    <div class="sheet-foot"><button class="btn btn-ghost" onclick="openRecordDetail('${id}')">취소</button><button class="btn btn-primary" onclick="submitEdit('${id}')">저장</button></div>`);
+}
+async function submitEdit(id) {
+  const reason = document.getElementById('ed-reason').value.trim(); if (!reason) { toast('수정 사유를 입력하세요','err'); return; }
+  const old = await DATA.getRecord(id); if (!old) return; const note = document.getElementById('ed-note').value.trim(); let upd;
+  if (old.type==='special') { const st=document.getElementById('ed-st').value, en=document.getElementById('ed-en').value, b=parseInt(document.getElementById('ed-break').value||'0',10)||0; if(!st||!en){toast('시간을 입력하세요','err');return;} const c=calcSpecial(st,en,b); if(c.minutes<=0){toast('근무 시간이 0분입니다','err');return;} upd={ startTime:st, endTime:en, breakMinutes:b, specialMinutes:c.minutes, nightMinutes:c.night, note }; }
+  else { const t=document.getElementById('ed-end').value; if(!t){toast('시간을 입력하세요','err');return;} const c=calcOvertime(old.workEndTime||state.settings.workEnd,t); if(c.minutes<=0){toast('정규 퇴근 시간 이전입니다','err');return;} upd={ actualEndTime:t, overtimeMinutes:c.minutes, nightMinutes:c.night, note }; }
+  try { await DATA.updateRecord(id, { ...upd, updatedBy: state.user.employeeId, lastEditReason: reason }); await writeAudit('update', id, old, { ...old, ...upd }, reason); closeSheet(); toast('수정되었습니다 (이력 보관)','ok'); renderEmp(); } catch(e) { toast('실패: '+e.message,'err'); }
+}
+function openDeleteRecord(id) {
+  openSheet(`<div class="sheet-title">기록 삭제</div><div class="sheet-sub">삭제해도 이력에는 영구 보관되며 대표가 열람할 수 있습니다.</div>
+    <div class="field"><label>삭제 사유 <span style="color:var(--danger)">*</span></label><input id="del-reason" placeholder="예: 잘못 입력한 기록"></div>
+    <div class="sheet-foot"><button class="btn btn-ghost" onclick="openRecordDetail('${id}')">취소</button><button class="btn btn-danger" onclick="submitDelete('${id}')">삭제</button></div>`);
+}
+async function submitDelete(id) {
+  const reason = document.getElementById('del-reason').value.trim(); if (!reason) { toast('삭제 사유를 입력하세요','err'); return; }
+  try { const old = await DATA.getRecord(id); await DATA.deleteRecord(id); await writeAudit('delete', id, old, null, reason); closeSheet(); toast('삭제되었습니다 (이력 보관)','ok'); renderEmp(); } catch(e) { toast('실패: '+e.message,'err'); }
+}
+
+// ---- 내 정보 ----
+function renderEmpMe(el) {
+  const u = state.user, s = state.settings, my = Pref.get('my_accent',''), mode = Pref.get('mode','light'), fs = Pref.get('fontsize','');
+  const rules = (s.rulesText||'').trim() ? s.rulesText.split('\n').filter(Boolean) : DEFAULT_RULES;
+  const grp = (key, ico, title, sub, body) => `<details class="grp" ${state.meOpen===key?'open':''} ontoggle="state.meOpen=this.open?'${key}':(state.meOpen==='${key}'?'':state.meOpen)"><summary><span class="ico">${ico}</span><span class="lbl">${title}<small>${sub}</small></span><span class="val">›</span></summary><div class="grp-body">${body}</div></details>`;
+  el.innerHTML = `<div class="card" style="text-align:center;padding:22px;"><div class="avatar" style="width:64px;height:64px;font-size:26px;border-radius:20px;margin:0 auto 10px;">${esc((u.name||'?')[0])}</div><div style="font-size:19px;font-weight:900;">${esc(u.name)}</div><div class="muted" style="font-size:13px;">사번 ${esc(u.employeeId)}${u.dept?' · '+esc(u.dept):''}</div><div class="chip chip-gray mt8">정규 근무 ${s.workStart||'09:00'} ~ ${s.workEnd}</div></div>
+    <div class="list">
+      <div class="setrow tap" onclick="openChangePin()"><div class="ico"></div><div class="lbl">PIN 변경<small>로그인할 때 쓰는 숫자 4~8자리</small></div><span class="val">›</span></div>
+      <div class="setrow tap" onclick="showInstallGuide()"><div class="ico"></div><div class="lbl">홈 화면에 앱 추가<small>아이콘 한 번으로 바로 열기</small></div><span class="val">›</span></div>
+    </div>
+    ${grp('look','','화면 꾸미기','내 색 · 라이트/다크 · 글자 크기', `
+      <div class="swatches" style="margin-top:8px;">${ACCENTS.map(c=>`<div class="swatch ${(my||s.accent)===c?'on':''}" style="background:${c}" onclick="setMyAccent('${c}')"></div>`).join('')}<div class="swatch-custom" title="직접 선택"><input type="color" value="${my||s.accent}" onchange="setMyAccent(this.value)"></div></div>
+      <div class="filters mt12" style="margin-bottom:0;">${[['light','라이트'],['dark','다크'],['auto','자동']].map(([k,l])=>`<button class="pill ${mode===k?'on':''}" onclick="setMode('${k}')">${l}</button>`).join('')}</div>
+      <div class="filters mt8" style="margin-bottom:0;">${[['','글자 보통'],['17px','글자 크게'],['18.5px','글자 더 크게']].map(([k,l])=>`<button class="pill ${fs===k?'on':''}" onclick="setFont('${k}')">${l}</button>`).join('')}</div>
+      ${my?`<button class="btn btn-ghost btn-sm btn-full mt12" onclick="setMyAccent('')">회사 기본 색으로 되돌리기</button>`:''}`)}
+    ${grp('rules','','근무기록 유의사항 · 법 기준','기록 책임 · 수정 이력 · 근로기준법 안내', `
+      <div class="rules" style="margin-top:4px;">${rules.map(r=>`<div class="rule">${esc(r)}</div>`).join('')}</div>
+      <div style="font-size:12px;color:var(--text-2);line-height:1.6;margin-top:12px;"><b>법 기준 안내 (2026-11 · 근로기준법 시행 2026.10.8. 기준)</b><br>${lawSummaryText()}</div>`)}
+    <button class="btn btn-danger-soft btn-full" onclick="doLogout()">로그아웃</button>
+    <div class="tiny muted" style="text-align:center;margin-top:14px;">${esc(s.companyName)} · ${APP_VER}</div>`;
+}
+function lawSummaryText() {
+  const s = state.settings;
+  if (s.lawMode==='over5') return '상시 5인 이상 사업장: 1일 8시간·주 40시간 초과 연장근로는 통상임금의 50% 이상 가산, 야간(22~06시) 50% 추가, 휴일근로 8시간 이내 50%·초과 100% 가산(제56조). 연장근로는 주 12시간 한도(제53조). 4시간 근무 시 30분·8시간 시 1시간 휴게(제54조). 2026.6.9. 공포 개정(법률 제21784호, 제54조 단서)으로 공포 6개월 뒤(2026년 12월)부터는 4시간 근무일 때 근로자가 명시적으로 요청하면 휴게 없이 퇴근할 수 있습니다.';
+  return '상시 5인 미만 사업장: 연장·야간·휴일 가산수당(제56조)과 주 12시간 연장 한도(제53조)는 현행법상 적용 대상이 아니며, 근로계약·취업규칙에 정한 바에 따릅니다. 5인 미만 확대 적용 개정안은 2026년 10월 기준 국회 계류 중(미시행)이며, 시행이 확정되면 설정에서 "5인 이상"으로 전환하면 가산 계산이 켜집니다. 휴게(제54조)·야간근로 시간은 참고용으로 별도 집계합니다. 2026.6.9. 공포 개정(법률 제21784호, 제54조 단서)으로 공포 6개월 뒤(2026년 12월)부터는 4시간 근무일 때 근로자가 명시적으로 요청하면 휴게 없이 퇴근할 수 있습니다(특근 입력의 휴게 칸은 직접 고칠 수 있음).';
+}
+function setMyAccent(c) { Pref.set('my_accent', c); applyTheme(); renderEmp(); }
+function setMode(m) { Pref.set('mode', m); applyTheme(); renderEmp(); }
+function setFont(f) { Pref.set('fontsize', f); applyTheme(); renderEmp(); }
+function openChangePin(first) {
+  openSheet(`<div class="sheet-title">${first?'내 PIN 만들기':'PIN 변경'}</div><div class="sheet-sub">${first?'첫 로그인이에요. 받으신 PIN을 나만 아는 숫자(4~8자리)로 바꿔 두세요. 나중에 설정 탭에서 해도 됩니다.':'숫자 4~8자리'}</div>
+    <div class="field"><label>현재 PIN</label><input type="password" id="pin-old" inputmode="numeric" maxlength="8"></div>
+    <div class="field"><label>새 PIN</label><input type="password" id="pin-new" inputmode="numeric" maxlength="8"></div>
+    <div class="field"><label>새 PIN 확인</label><input type="password" id="pin-new2" inputmode="numeric" maxlength="8"></div>
+    <div class="sheet-foot"><button class="btn btn-ghost" onclick="closeSheet()">취소</button><button class="btn btn-primary" onclick="submitChangePin()">변경</button></div>`);
+}
+async function submitChangePin() {
+  const o=document.getElementById('pin-old').value, n=document.getElementById('pin-new').value, n2=document.getElementById('pin-new2').value;
+  if (!o||!n||!n2) { toast('모든 항목을 입력하세요','err'); return; } if (n!==n2) { toast('새 PIN이 서로 다릅니다','err'); return; } if (n.length<4) { toast('PIN은 4자리 이상','err'); return; }
+  try { await DATA.changePin(o,n); closeSheet(); toast('PIN이 변경되었습니다','ok'); } catch(e) { toast(e.code==='auth/wrong-password'?'현재 PIN이 올바르지 않습니다':'오류: '+e.message,'err'); }
+}
+</script>
+<script>
+// =====================================================================
+//  대표(관리자) 화면 — 열람·PDF·이력·설정 (기록 수정/삭제 불가)
+// =====================================================================
+function admTab(tab) { state.admTab = tab; ['dash','records','pdf','audit','settings'].forEach(t => document.getElementById('anav-'+t).classList.toggle('active', t===tab)); renderAdm(); }
+async function renderAdm() {
+  const el = document.getElementById('adm-content'); el.innerHTML = loadingHtml(); window.scrollTo(0,0);
+  try { const t = state.admTab; if (t==='dash') await renderDash(el); else if (t==='records') await renderAdmRecords(el); else if (t==='pdf') await renderPdfTab(el); else if (t==='audit') await renderAudit(el); else await renderSettings(el); }
+  catch(e) { console.error(e); el.innerHTML = errorHtml(e, 'renderAdm()'); }
+}
+async function getEmployees() { if (!state.employeesCache) state.employeesCache = await DATA.listEmployees(true); return state.employeesCache; }
+function pdfKey(month, round) { return `${month}_${round}`; }
+// 5일(1차)·25일(2차) 전월 PDF 알림 판단
+function pdfReminders() {
+  const d = new Date(), day = d.getDate(), pm = prevMonthStr();
+  const out = [];
+  if (day >= 5 && !state.pdfLog[pdfKey(pm,1)]) out.push({ month: pm, round: 1, due: '5일' });
+  if (day >= 25 && !state.pdfLog[pdfKey(pm,2)]) out.push({ month: pm, round: 2, due: '25일' });
+  return out;
+}
+function reminderHtml() {
+  return pdfReminders().map(r => `<div class="alert-banner"><div style="flex:1"><div class="t">${monthLabel(r.month)} 근무기록지 ${r.round}차 PDF 저장</div><div class="s">매월 ${r.due} 저장 예정 · 아직 저장되지 않았습니다</div></div><button class="btn" onclick="state.admMonth='${r.month}';admTab('pdf')">저장하기</button></div>`).join('');
+}
+
+async function renderDash(el) {
+  const month = monthStr(), [records, employees] = await Promise.all([DATA.listRecords({month}), getEmployees()]);
+  const sum = summarize(records), today = todayStr(), todays = records.filter(r=>r.date===today), s = state.settings;
+  const byEmp = {}; records.forEach(r => { (byEmp[r.employeeId] = byEmp[r.employeeId] || { name:r.employeeName, recs:[] }).recs.push(r); });
+  const staff = employees.filter(e=>e.role==='employee');
+  const edited = records.filter(r=>r.editCount).length;
+  el.innerHTML = `${reminderHtml()}
+    <div class="hero" style="padding-bottom:16px;"><div class="hero-date">${monthLabel(month)} 현황 · ${staff.length}명</div><div class="hero-title">${esc(s.companyName)} 근무기록</div>
+      <div class="hero-row"><div class="hero-box"><div class="k">야근 합계</div><div class="v">${fmtMin(sum.ot)}</div></div><div class="hero-box"><div class="k">특근 합계</div><div class="v">${fmtMin(sum.sp)}</div></div><div class="hero-box"><div class="k">야간 포함</div><div class="v">${fmtMin(sum.night)}</div></div></div>
+      ${s.showPremium?`<div class="hero-preview" style="margin-top:8px;"><span>가산 환산시간 (연장1.5·야간+0.5·휴일) 참고</span><b>${sum.premium.toFixed(1)}h</b></div>`:''}
+    </div>
+    <div class="stats"><div class="stat"><div class="k">기록 건수</div><div class="v">${records.length}</div><div class="s">야근 ${sum.otDays} · 특근 ${sum.spDays}</div></div><div class="stat"><div class="k">오늘 기록</div><div class="v">${todays.length}<span class="tiny muted">/${staff.length}</span></div><div class="s">명</div></div><div class="stat ${edited?'night':''}"><div class="k">수정된 기록</div><div class="v">${edited}</div><div class="s">이력 보관</div></div></div>
+    <div class="sec-title">직원별 이달 합계</div>
+    ${Object.keys(byEmp).length ? `<div class="list">${Object.entries(byEmp).sort((a,b)=>summarize(b[1].recs).total-summarize(a[1].recs).total).map(([id,v])=>{ const ss=summarize(v.recs); return `<div class="row tap" onclick="state.admMonth='${month}';state.admEmp='${id}';admTab('records')"><div class="avatar">${esc(v.name[0])}</div><div class="row-body"><div class="row-title">${esc(v.name)}${ss.edits?`<span class="chip chip-warn">수정 ${ss.edits}</span>`:''}</div><div class="row-sub">야근 ${ss.otDays}일 ${fmtMin(ss.ot)}${ss.sp?` · 특근 ${ss.spDays}일 ${fmtMin(ss.sp)}`:''}${ss.night?` · 야간 ${fmtMin(ss.night)}`:''}</div></div><div class="row-right"><div class="dur">${fmtMin(ss.total)}</div><span class="tiny muted">${fmtH(ss.total)}h</span></div></div>`; }).join('')}</div>` : `<div class="empty"><div class="ico"></div><p>이달 기록이 아직 없습니다</p></div>`}
+    <div class="sec-title">오늘 기록</div>
+    ${todays.length ? `<div class="list">${todays.map(r=>recordRowHtml(r,true)).join('')}</div>` : `<div class="empty" style="padding:20px;"><p>오늘 기록 없음</p></div>`}
+    <div class="notice info" style="margin-top:4px;">대표 계정은 기록을 <b>열람·PDF 저장</b>만 할 수 있습니다. 수정·삭제는 직원 본인이 사유와 함께 하며 모든 이력이 보관됩니다.</div>`;
+}
+
+async function renderAdmRecords(el) {
+  const employees = await getEmployees(), month = state.admMonth;
+  const all = await DATA.listRecords({ month, empId: state.admEmp });
+  const records = state.admType==='all' ? all : all.filter(r=>(r.type||'overtime')===state.admType);
+  const sum = summarize(all);
+  el.innerHTML = `<div class="monthbar"><button onclick="admMonth(-1)">‹</button><span class="m">${monthLabel(month)}</span><button onclick="admMonth(1)">›</button></div>
+    <div class="filters"><select onchange="state.admEmp=this.value;renderAdm()"><option value="all">전체 직원</option>${employees.map(e=>`<option value="${esc(e.employeeId)}" ${state.admEmp===e.employeeId?'selected':''}>${esc(e.name)}</option>`).join('')}</select>
+      ${[['all','전체'],['overtime',''],['special','']].map(([k,l])=>`<button class="pill ${state.admType===k?'on':''} ${k==='special'?'special':''}" onclick="state.admType='${k}';renderAdm()">${l}</button>`).join('')}
+      <button class="pill" onclick="exportCSV()">CSV</button></div>
+    <div class="stats"><div class="stat accent"><div class="k">야근</div><div class="v">${fmtMin(sum.ot)}</div><div class="s">${sum.otDays}건</div></div><div class="stat special"><div class="k">특근</div><div class="v">${fmtMin(sum.sp)}</div><div class="s">${sum.spDays}건</div></div><div class="stat night"><div class="k">야간</div><div class="v">${fmtMin(sum.night)}</div><div class="s">합계 ${fmtH(sum.total)}h</div></div></div>
+    ${state.settings.weeklyLimitWarn && state.admEmp!=='all' ? weekWarnHtml(all) : ''}
+    ${records.length?`<div class="list">${records.map(r=>recordRowHtml(r, state.admEmp==='all')).join('')}</div>`:`<div class="empty"><div class="ico"></div><p>기록이 없습니다</p></div>`}`;
+}
+function admMonth(dir) { state.admMonth = shiftMonth(state.admMonth, dir); renderAdm(); }
+
+async function exportCSV() {
+  toast('CSV 생성 중...');
+  const month = state.admMonth; let rs = await DATA.listRecords({ month, empId: state.admEmp }); if (state.admType!=='all') rs = rs.filter(r=>(r.type||'overtime')===state.admType);
+  if (!rs.length) { toast('내보낼 데이터가 없습니다','err'); return; }
+  const header = ['날짜','요일','직원명','사번','유형','시간','휴게(분)','근무(분)','근무(시간)','야간(분)','메모','수정횟수','등록자'];
+  const rows = rs.slice().sort((a,b)=>a.date.localeCompare(b.date)||a.employeeName.localeCompare(b.employeeName)).map(r=>{ const c=recCalc(r), i=dateInfo(r.date); return [r.date,i.wd,r.employeeName,r.employeeId,r.type==='special'?'특근':'야근',recTimeStr(r),r.breakMinutes||0,c.minutes,fmtH(c.minutes),c.night,r.note||'',r.editCount||0,r.createdBy||'']; });
+  const q = v => `"${String(v??'').replace(/"/g,'""')}"`;
+  const csv = [header,...rows].map(r=>r.map(q).join(',')).join('\n');
+  const blob = new Blob(['﻿'+csv],{type:'text/csv;charset=utf-8;'}); const url=URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download=`근무기록_${month}${state.admEmp!=='all'?'_'+state.admEmp:''}.csv`; a.click(); URL.revokeObjectURL(url);
+  toast('CSV 다운로드 완료','ok');
+}
+
+// ---- 이력 ----
+async function renderAudit(el) {
+  const month = state.auditMonth || '';
+  const logs = await DATA.listAudit(month ? { month } : { limit: 150 });
+  const lab = {create:'등록',update:'수정',delete:'삭제',pin_reset:'PIN 초기화',pdf:'PDF 저장',import:'과거 기록 가져오기',import_undo:'↩ 가져오기 취소',migrate:'데이터 정리'}, col = {create:'var(--ok)',update:'var(--warn)',delete:'var(--danger)',pin_reset:'var(--night)',pdf:'var(--accent)',import:'var(--special)',import_undo:'var(--danger)',migrate:'var(--text-2)'};
+  el.innerHTML = `<div class="filters"><button class="pill ${!month?'on':''}" onclick="state.auditMonth='';renderAdm()">최근 150건</button><button class="pill ${month===monthStr()?'on':''}" onclick="state.auditMonth='${monthStr()}';renderAdm()">이번 달</button><button class="pill ${month===prevMonthStr()?'on':''}" onclick="state.auditMonth='${prevMonthStr()}';renderAdm()">지난 달</button></div>
+    <div class="notice info">모든 등록·수정·삭제가 누가·언제·왜 했는지와 함께 영구 보관됩니다. 삭제된 기록의 내용도 남습니다.</div>
+    ${logs.length?`<div class="list">${logs.map(h=>`<div class="audit-row"><div class="audit-head"><span class="a" style="color:${col[h.action]||'inherit'}">${lab[h.action]||esc(h.action)} ${h.modifiedByRole==='employee'?'':'<span class="chip chip-accent">관리</span>'}</span><span class="t">${fmtDT(h.timestamp)}</span></div><div class="by"><b>${esc(h.modifiedByName||h.modifiedBy)}</b>${h.targetEmployeeName&&h.targetEmployeeName!==h.modifiedByName?` → ${esc(h.targetEmployeeName)}`:''}${h.targetDate?` · ${dateInfo(h.targetDate).label}`:''}${h.after&&!h.before?` · ${esc(h.after.type==='special'?`특근 ${h.after.startTime}~${h.after.endTime}`:`야근 퇴근 ${h.after.actualEndTime}`)}`:''}${h.before&&!h.after?` · 삭제됨: ${esc(h.before.type==='special'?`특근 ${h.before.startTime}~${h.before.endTime}`:`야근 퇴근 ${h.before.actualEndTime}`)}`:''}</div>${diffHtml(h)?`<div class="diff">${diffHtml(h)}</div>`:''}${h.reason?`<div class="why">사유: ${esc(h.reason)}</div>`:''}</div>`).join('')}</div>`:`<div class="empty"><div class="ico"></div><p>이력이 없습니다</p></div>`}`;
+}
+
+// ---- 설정 ----
+function grpHtml(key, ico, title, sub, body, defOpen) {
+  const open = state.setOpen[key] === undefined ? !!defOpen : !!state.setOpen[key];
+  return `<details class="grp" ${open?'open':''} ontoggle="state.setOpen['${key}']=this.open"><summary><span class="ico">${ico}</span><span class="lbl">${title}<small>${sub}</small></span><span class="val">›</span></summary><div class="grp-body">${body}</div></details>`;
+}
+async function renderSettings(el) {
+  if (state.user.role!=='superadmin') { el.innerHTML = `<div class="empty"><div class="ico"></div><p>대표만 접근할 수 있습니다</p></div>`; return; }
+  const s = state.settings, employees = await DATA.listEmployees(false);
+  const roleLab = {superadmin:'대표',admin:'관리자',employee:'직원'};
+  const active = employees.filter(e=>e.active!==false).length;
+  const staff = `<div class="tiny muted" style="margin:8px 0 10px;line-height:1.6;">직원을 추가하면 <b>초대 문자</b>가 바로 만들어집니다. 카톡으로 보내면 직원은 <b>링크 열기 → PIN 입력 → 홈 화면에 추가</b> 세 번이면 끝입니다. 직원을 누르면 초대 문자 다시 보내기·PIN 초기화·비활성화.</div>
+    <button class="btn btn-primary btn-full mb8" onclick="openAddEmp()">＋ 직원 추가</button>
+    <div class="list">${employees.map(e=>`<div class="row tap" onclick="openEditEmp('${e.id}')"><div class="avatar ${e.active===false?'gray':''}">${esc((e.name||'?')[0])}</div><div class="row-body"><div class="row-title">${esc(e.name)} <span class="chip ${e.role==='superadmin'?'chip-night':e.role==='admin'?'chip-accent':'chip-gray'}">${roleLab[e.role]||'직원'}</span>${e.active===false?'<span class="chip chip-danger">비활성</span>':''}</div><div class="row-sub">사번 ${esc(e.employeeId)}${e.dept?' · '+esc(e.dept):''}</div></div><span class="tiny muted">›</span></div>`).join('')}</div>`;
+  const rules = `<div class="list" style="margin-top:8px;">
+      <div class="setrow"><div class="ico"></div><div class="lbl">정규 출근</div><input class="inline" type="time" value="${s.workStart||'09:00'}" onchange="saveCfg('workStart',this.value)" style="max-width:120px;"></div>
+      <div class="setrow"><div class="ico"></div><div class="lbl">정규 퇴근<small>이 시각 이후가 야근으로 계산</small></div><input class="inline" type="time" value="${s.workEnd}" onchange="saveCfg('workEnd',this.value)" style="max-width:120px;"></div>
+      <div class="setrow"><div class="ico"></div><div class="lbl">직원 본인 수정·삭제 허용<small>끄면 등록만 가능 (사유 입력·이력은 항상 남음)</small></div><button class="toggle ${s.allowSelfEdit?'on':''}" onclick="toggleCfg('allowSelfEdit')"></button></div>
+      <div class="setrow"><div class="ico"></div><div class="lbl">전월 기록 추가 허용<small>전월 1차 PDF를 저장하기 전(매월 5일 전)까지 전월 날짜도 추가 가능</small></div><button class="toggle ${s.allowPrevMonth!==false?'on':''}" onclick="toggleCfg('allowPrevMonth')"></button></div>
+      <div class="setrow"><div class="ico"></div><div class="lbl">지난 날짜 추가 범위</div><select class="inline" style="max-width:150px;" onchange="saveCfg('pastDaysLimit',parseInt(this.value))"><option value="0" ${!s.pastDaysLimit?'selected':''}>당월 내 자유</option><option value="7" ${s.pastDaysLimit==7?'selected':''}>최근 7일</option><option value="3" ${s.pastDaysLimit==3?'selected':''}>최근 3일</option></select></div>
+    </div>`;
+  const data = `<div class="list" style="margin-top:8px;">
+      <div class="setrow tap" onclick="openImport()"><div class="ico"></div><div class="lbl">과거 기록 가져오기<small>엑셀·CSV·붙여넣기로 예전 야근 기록을 한 번에 넣기</small></div><span class="val">›</span></div>
+      <div class="setrow tap" onclick="openImportHistory()"><div class="ico">↩</div><div class="lbl">가져오기 내역·취소<small>잘못 넣은 묶음을 통째로 되돌리기</small></div><span class="val">›</span></div>
+      <div class="setrow tap" onclick="runMigrate()"><div class="ico"></div><div class="lbl">데이터 정리 (한 번만)<small>예전 기록에 달(month) 표시를 채워 직원 화면이 그 달 것만 읽게 함 ${s.monthIndexed?'· <b style="color:var(--ok)">완료</b>':'· 아직 안 함'}</small></div><span class="val">›</span></div>
+      <div class="setrow tap" onclick="state.admMonth=monthStr();state.admType='all';state.admEmp='all';exportCSV()"><div class="ico"></div><div class="lbl">이달 기록 CSV 내보내기</div><span class="val">›</span></div>
+    </div>`;
+  const text = `<div class="card" style="margin-top:8px;">
+      <div class="field"><label>직원 화면 공지 (비우면 숨김)</label><input value="${esc(s.noticeText||'')}" onblur="saveCfg('noticeText',this.value)" placeholder="예: 10월 기록은 11월 5일에 PDF로 저장됩니다"></div>
+      <div class="field"><label>근무기록 유의사항 (한 줄에 하나 · 비우면 기본 문구)</label><textarea class="textarea" onblur="saveCfg('rulesText',this.value)" placeholder="${esc(DEFAULT_RULES.join('\n'))}">${esc(s.rulesText||'')}</textarea></div>
+      <div class="field"><label>PDF 하단 문구</label><textarea class="textarea" style="min-height:60px;" onblur="saveCfg('pdfFooter',this.value)">${esc(s.pdfFooter||'')}</textarea></div>
+      <div class="grid2"><div class="field"><label>PDF 서명란 1</label><input value="${esc(s.pdfSignEmp||'')}" onblur="saveCfg('pdfSignEmp',this.value)"></div><div class="field"><label>PDF 서명란 2</label><input value="${esc(s.pdfSignBoss||'')}" onblur="saveCfg('pdfSignBoss',this.value)"></div></div>
+      <div class="grid2"><div class="field"><label>로그인 안내 문구</label><input value="${esc(s.loginSub)}" onblur="saveCfg('loginSub',this.value)"></div><div class="field"><label>로그인 하단 문구</label><input value="${esc(s.loginFoot)}" onblur="saveCfg('loginFoot',this.value)"></div></div>
+    </div>`;
+  const look = `<div class="list" style="margin-top:8px;">
+      <div class="setrow"><div class="ico"></div><div class="lbl">회사명</div><input class="inline" value="${esc(s.companyName)}" onblur="saveCfg('companyName',this.value)"></div>
+      <div class="setrow"><div class="ico"></div><div class="lbl">앱 이름<small>상단·홈 아이콘 이름</small></div><input class="inline" value="${esc(s.appName)}" onblur="saveCfg('appName',this.value)"></div>
+      <div class="setrow" style="align-items:flex-start;"><div class="ico"></div><div class="lbl">회사 로고<small>로그인·상단·앱 아이콘에 사용 · 정사각형 PNG 권장 (자동으로 512px로 줄여 저장)</small>
+        <div style="display:flex;gap:8px;align-items:center;margin-top:8px;flex-wrap:wrap;">${s.logo?`<img src="${s.logo}" style="height:40px;max-width:120px;object-fit:contain;border:1px solid var(--line);border-radius:8px;padding:2px;">`:'<span class="tiny muted">로고 없음</span>'}<label class="btn btn-ghost btn-xs" style="cursor:pointer;">업로드<input type="file" accept="image/*" class="hidden" onchange="uploadImg(this,'logo',800000)"></label>${s.logo?`<button class="btn btn-danger-soft btn-xs" onclick="saveImg('logo','')">제거</button>`:''}</div></div></div>
+    </div>
+    <div class="card"><div class="card-title">포인트 색 (버튼·강조) <span class="tiny muted">직원은 본인 화면만 따로 바꿀 수 있음</span></div><div class="swatches">${ACCENTS.map(c=>`<div class="swatch ${s.accent===c?'on':''}" style="background:${c}" onclick="saveCfg('accent','${c}')"></div>`).join('')}<div class="swatch-custom"><input type="color" value="${s.accent}" onchange="saveCfg('accent',this.value)"></div></div></div>
+    <div class="card"><div class="card-title">스플래시(앱 시작 화면) 배경색</div><div class="swatches">${[...new Set(['#1E293B','#0F172A','#FFFFFF','#000000',...ACCENTS])].map(c=>`<div class="swatch ${s.splash===c?'on':''}" style="background:${c};${c==='#FFFFFF'?'border:1px solid var(--line);':''}" onclick="saveCfg('splash','${c}')"></div>`).join('')}<div class="swatch-custom"><input type="color" value="${s.splash}" onchange="saveCfg('splash',this.value)"></div></div><div class="tiny muted mt8">변경 후 홈 화면 아이콘을 지웠다가 다시 추가해야 반영됩니다.</div></div>
+    <div class="card"><div class="card-title">앱 배경</div><div class="swatches">${[['','기본'],['#FFFFFF',''],['#F0FDF4',''],['#EFF6FF',''],['#FDF4FF',''],['#FFF7ED',''],['#F1F5F9','']].map(([c,l])=>`<div class="swatch ${s.bgColor===c?'on':''}" style="background:${c||'linear-gradient(135deg,#f3f4f8 50%,#e2e8f0 50%)'};border:1px solid var(--line);font-size:10px;display:flex;align-items:center;justify-content:center;color:#64748B;" onclick="saveCfg('bgColor','${c}')">${l}</div>`).join('')}<div class="swatch-custom"><input type="color" value="${s.bgColor||'#F3F4F8'}" onchange="saveCfg('bgColor',this.value)"></div></div>
+      <div style="display:flex;gap:8px;align-items:center;margin-top:12px;flex-wrap:wrap;"><span class="tiny" style="font-weight:700;">배경 이미지 <span class="muted">(세로 사진 권장 · 자동으로 줄여 저장)</span></span>${s.bgImage?`<img src="${s.bgImage}" style="height:48px;border-radius:8px;border:1px solid var(--line);">`:''}<label class="btn btn-ghost btn-xs" style="cursor:pointer;">업로드<input type="file" accept="image/*" class="hidden" onchange="uploadImg(this,'bgImage',1500000)"></label>${s.bgImage?`<button class="btn btn-danger-soft btn-xs" onclick="saveImg('bgImage','')">제거</button>`:''}</div></div>`;
+  const law = `<div class="list" style="margin-top:8px;">
+      <div class="setrow"><div class="ico"></div><div class="lbl">사업장 규모<small>5인 이상으로 바꾸면 가산 계산·주 12시간 경고가 켜집니다</small></div><select class="inline" style="max-width:130px;" onchange="setLawMode(this.value)"><option value="under5" ${s.lawMode!=='over5'?'selected':''}>5인 미만</option><option value="over5" ${s.lawMode==='over5'?'selected':''}>5인 이상</option></select></div>
+      <div class="setrow"><div class="ico"></div><div class="lbl">가산 환산시간 표시<small>연장 1.5배 · 야간 +0.5배 · 휴일 8h 초과 2배 (참고용)</small></div><button class="toggle ${s.showPremium?'on':''}" onclick="toggleCfg('showPremium')"></button></div>
+      <div class="setrow"><div class="ico"></div><div class="lbl">주 12시간 연장 한도 경고</div><button class="toggle ${s.weeklyLimitWarn?'on':''}" onclick="toggleCfg('weeklyLimitWarn')"></button></div>
+    </div>
+    <div class="card" style="font-size:12px;color:var(--text-2);line-height:1.6;"><b>현재 기준 요약 (2026-11 · 근로기준법 시행 2026.10.8. 기준)</b><br>${lawSummaryText()}<br><span class="tiny muted">법 개정 시 이 설정만 바꾸면 됩니다. 최종 판단은 노무사·고용노동부 확인을 권장합니다.</span></div>`;
+  el.innerHTML = `
+    ${grpHtml('staff','',`직원 (${active}명)`,'추가 · 초대 문자 · PIN 초기화 · 비활성화', staff, true)}
+    ${grpHtml('rules','','근무 규칙','정규 출퇴근 시각 · 직원 수정 허용 · 지난 날짜 범위', rules)}
+    ${grpHtml('data','','데이터 · 과거 기록','가져오기 · 되돌리기 · 데이터 정리 · CSV', data)}
+    ${grpHtml('text','','문구','직원 공지 · 유의사항 · PDF 문구 · 로그인 문구', text)}
+    ${grpHtml('look','','꾸미기','회사명 · 앱 이름 · 로고 · 색 · 배경', look)}
+    ${grpHtml('law','','근로기준법 적용','사업장 규모 · 가산 표시 · 주 12시간 경고', law)}
+    <div class="tiny muted" style="text-align:center;margin:4px 0 10px;">${APP_VER} · Firebase 프로젝트 ${FIREBASE_CONFIG.projectId}</div>`;
+}
+async function saveCfg(key, val) { if (state.settings[key] === val) return; state.settings[key] = val; state.employeesCache=null; try { await DATA.saveSettings({ [key]: val }); applyTheme(); toast('저장됨','ok'); if (['accent','splash','bgColor','lawMode'].includes(key)) renderAdm(); } catch(e) { toast('저장 실패: '+e.message,'err'); } }
+async function toggleCfg(key) { await saveCfg(key, !state.settings[key]); renderAdm(); }
+async function setLawMode(v) { state.settings.lawMode=v; const over = v==='over5'; await DATA.saveSettings({ lawMode:v, showPremium:over, weeklyLimitWarn:over }); state.settings.showPremium=over; state.settings.weeklyLimitWarn=over; toast(over?'5인 이상 기준으로 전환 (가산 계산·주12h 경고 켜짐)':'5인 미만 기준으로 전환','ok'); renderAdm(); }
+function uploadImg(input, key, max) {
+  const f = input.files[0]; if (!f) return; if (f.size > 8000000) { toast('이미지는 8MB 이하로 해주세요','err'); return; }
+  // 로고는 512px 정사각 PNG, 배경은 긴 변 1280px JPEG로 줄여 저장 (Firestore 문서 1MB 한계 안에 들어오게)
+  const rd = new FileReader();
+  rd.onload = e => { const img = new Image(); img.onload = () => {
+      const isLogo = key==='logo', maxSide = isLogo ? 512 : 1280; let w = img.width, h = img.height; const sc = Math.min(1, maxSide/Math.max(w,h)); w = Math.round(w*sc); h = Math.round(h*sc);
+      const cv = document.createElement('canvas'); cv.width = w; cv.height = h; const x = cv.getContext('2d'); if (!isLogo) { x.fillStyle = '#fff'; x.fillRect(0,0,w,h); } x.drawImage(img, 0, 0, w, h);
+      let out = isLogo ? cv.toDataURL('image/png') : cv.toDataURL('image/jpeg', 0.82);
+      if (isLogo && out.length > 700000) out = cv.toDataURL('image/jpeg', 0.9);
+      if (out.length > 900000) { toast('이미지가 너무 큽니다. 더 작은 이미지를 올려 주세요','err'); return; }
+      saveImg(key, out); };
+    img.onerror = () => toast('이미지를 읽을 수 없습니다','err'); img.src = e.target.result; };
+  rd.readAsDataURL(f);
+}
+async function saveImg(key, data) {
+  try { if (key==='logo') { await DATA.saveLogo(data); state.settings.logo=data; Pref.set('logo',data||''); } else { await DATA.saveBg(data); state.settings.bgImage=data; } applyTheme(); toast(data?'업로드 완료':'제거 완료','ok'); renderAdm(); } catch(e) { toast('실패: '+e.message,'err'); }
+}
+// ---- 직원 관리 · 초대 문자 ----
+function inviteUrl(empId) { return `${location.origin}${location.pathname}?e=${encodeURIComponent(empId)}`; }
+function inviteText(emp, pin, mode) {
+  const s = state.settings, app = s.appName || '근무기록';
+  if (mode === 'reset') return `[${s.companyName} ${app}] ${emp.name}님, 앱 PIN이 ${pin}(으)로 초기화되었습니다.\n아래 링크로 들어가 새 PIN으로 로그인한 뒤, 설정 탭에서 나만 아는 번호로 바꿔 주세요.\n${inviteUrl(emp.employeeId)}`;
+  return `[${s.companyName} ${app} 앱 안내]\n${emp.name}님, 야근·특근 시간은 이 앱에서 본인이 직접 기록합니다.\n\n① 폰에서 아래 링크 열기\n${inviteUrl(emp.employeeId)}\n② 로그인: 사번 ${emp.employeeId} / PIN ${pin||'(따로 알려 드린 번호)'}\n③ 로그인 뒤 안내가 뜨면 "홈 화면에 앱 추가" → 다음부턴 아이콘으로 바로 열림\n④ 설정 탭에서 PIN을 나만 아는 번호로 바꾸기\n\n퇴근할 때 "지금 퇴근 기록" 버튼 한 번이면 끝. 주말 근무는 특근 화면이 자동으로 뜹니다. 깜빡했으면 "다른 시간·지난 날짜로 기록"에서 사유와 함께 넣으면 됩니다.`;
+}
+async function copyTextPlain(t, ta) { try { await navigator.clipboard.writeText(t); return true; } catch(e) { if (ta) { ta.focus(); ta.select(); try { return document.execCommand('copy'); } catch(_) {} } return false; } }
+function openInvite(emp, pin, mode) {
+  const t = inviteText(emp, pin, mode);
+  openSheet(`<div class="sheet-title">${esc(emp.name)}님 ${mode==='reset'?'PIN 안내 문자':'초대 문자'}</div><div class="sheet-sub">복사해서 카톡·문자로 보내세요. 링크를 열면 사번이 미리 채워져 PIN만 넣으면 됩니다.</div>
+    <textarea class="textarea" id="inv-txt" style="min-height:${mode==='reset'?130:270}px;font-size:13px;line-height:1.55;">${esc(t)}</textarea>
+    <div class="sheet-foot"><button class="btn btn-ghost" onclick="closeSheet()">닫기</button><button class="btn btn-primary" onclick="copyInvite()">복사 → 카톡에 붙여넣기</button></div>`);
+}
+async function copyInvite() { const ta = document.getElementById('inv-txt'); const ok = await copyTextPlain(ta.value, ta); if (ok) { closeSheet(); toast('복사됨 → 카톡 대화창에 붙여넣기','ok'); } else toast('복사가 안 됐어요. 글을 길게 눌러 복사해 주세요','err'); }
+function randomPin() { return String(Math.floor(1000 + Math.random()*9000)); }
+function openAddEmp() {
+  openSheet(`<div class="sheet-title">직원 추가</div><div class="sheet-sub">추가하면 초대 문자가 바로 만들어집니다. 직원은 링크 → PIN → 홈 화면 추가로 끝.</div>
+    <div class="grid2"><div class="field"><label>이름</label><input id="ne-name" placeholder="홍길동"></div><div class="field"><label>사번 (숫자 권장)</label><input id="ne-id" placeholder="예: 1234" inputmode="numeric" autocomplete="off"></div></div>
+    <div class="grid2"><div class="field"><label>첫 PIN (4자리 이상 · 자동 생성됨)</label><input id="ne-pin" inputmode="numeric" value="${randomPin()}"></div><div class="field"><label>부서</label><input id="ne-dept" placeholder="시공팀"></div></div>
+    <div class="field"><label>권한</label><select id="ne-role"><option value="employee">직원 (기록 입력)</option><option value="admin">관리자 (열람만)</option><option value="superadmin">대표 (열람·설정)</option></select></div>
+    <div class="sheet-foot"><button class="btn btn-ghost" onclick="closeSheet()">취소</button><button class="btn btn-primary" id="ne-btn" onclick="submitAddEmp()">추가하고 초대 문자 만들기</button></div>`);
+}
+async function submitAddEmp() {
+  const name=document.getElementById('ne-name').value.trim(), employeeId=document.getElementById('ne-id').value.trim(), pin=document.getElementById('ne-pin').value.trim(), dept=document.getElementById('ne-dept').value.trim(), role=document.getElementById('ne-role').value;
+  if (!name||!employeeId||!pin) { toast('이름·사번·PIN은 필수입니다','err'); return; } if (pin.length<4) { toast('PIN은 4자리 이상','err'); return; }
+  const btn=document.getElementById('ne-btn'); btn.disabled=true; btn.innerHTML='<span class="spin"></span>';
+  try { const all = await DATA.listEmployees(false); if (all.find(e=>e.employeeId===employeeId)) { toast('이미 있는 사번입니다','err'); return; } await DATA.createEmployee({name,employeeId,pin,dept,role}); state.employeesCache=null; toast(`${name} 추가 완료`,'ok'); renderAdm(); openInvite({ name, employeeId }, pin); }
+  catch(e) { toast(e.code==='auth/email-already-in-use'?'이미 사용된 사번입니다 (비활성 직원 포함)':'실패: '+e.message,'err'); } finally { btn.disabled=false; btn.textContent='추가하고 초대 문자 만들기'; }
+}
+async function openEditEmp(id) {
+  const e = (await DATA.listEmployees(false)).find(x=>x.id===id); if (!e) return; const me = e.employeeId===state.user.employeeId;
+  openSheet(`<div class="sheet-title">${esc(e.name)} <span class="chip chip-gray">사번 ${esc(e.employeeId)}</span></div><div class="sheet-sub">${e.active===false?'비활성 상태 (로그인 불가)':'활성'}</div>
+    ${e.active===false?'':`<button class="btn btn-soft btn-full mb8" onclick='openInvite(${JSON.stringify({name:e.name, employeeId:e.employeeId})}, "")'>초대 문자 다시 만들기</button>`}
+    <div class="grid2"><div class="field"><label>이름</label><input id="ee-name" value="${esc(e.name)}"></div><div class="field"><label>부서</label><input id="ee-dept" value="${esc(e.dept||'')}"></div></div>
+    <div class="field"><label>권한</label><select id="ee-role" ${me?'disabled':''}><option value="employee" ${e.role==='employee'?'selected':''}>직원</option><option value="admin" ${e.role==='admin'?'selected':''}>관리자 (열람만)</option><option value="superadmin" ${e.role==='superadmin'?'selected':''}>대표</option></select></div>
+    <div class="field"><label>PIN 초기화 (새 PIN 입력 · 비우면 유지 · 저장하면 안내 문자가 만들어짐)</label><input id="ee-pin" inputmode="numeric" placeholder="예: 5678"></div>
+    <div class="sheet-foot"><button class="btn btn-ghost" onclick="closeSheet()">취소</button>${!me?`<button class="btn ${e.active===false?'btn-soft':'btn-danger-soft'}" onclick="toggleEmpActive('${id}',${e.active===false})">${e.active===false?'다시 활성화':'비활성화'}</button>`:''}<button class="btn btn-primary" id="ee-btn" onclick="submitEditEmp('${id}','${esc(e.employeeId)}')">저장</button></div>`);
+}
+async function submitEditEmp(id, empId) {
+  const name=document.getElementById('ee-name').value.trim(), dept=document.getElementById('ee-dept').value.trim(), role=document.getElementById('ee-role').value, pin=document.getElementById('ee-pin').value.trim();
+  if (!name) { toast('이름을 입력하세요','err'); return; } if (pin && pin.length<4) { toast('PIN은 4자리 이상','err'); return; }
+  const btn=document.getElementById('ee-btn'); btn.disabled=true; btn.innerHTML='<span class="spin"></span>';
+  try { await DATA.updateEmployee(id, { name, dept, role }); if (pin) { await DATA.resetPin(id, empId, pin); await DATA.addAudit({ action:'pin_reset', recordId:'emp_'+empId, before:null, after:{employeeId:empId}, reason:'PIN 초기화', modifiedBy:state.user.employeeId, modifiedByName:state.user.name, modifiedByRole:state.user.role, targetEmployee:empId, targetEmployeeName:name, targetDate:'' }); }
+    state.employeesCache=null; toast(pin?'저장 + PIN 초기화 완료':'저장 완료','ok'); renderAdm(); if (pin) openInvite({ name, employeeId: empId }, pin, 'reset'); else closeSheet(); }
+  catch(e) { toast('실패: '+e.message,'err'); } finally { btn.disabled=false; btn.textContent='저장'; }
+}
+function toggleEmpActive(id, reactivate) {
+  confirmDlg(reactivate?'':'', reactivate?'다시 활성화':'비활성화', reactivate?'다시 로그인할 수 있게 됩니다.':'로그인이 막힙니다. 기존 기록은 그대로 보관됩니다.', [{label:'취소'},{label:reactivate?'활성화':'비활성화',cls:reactivate?'btn-primary':'btn-danger',fn:async()=>{ try { await DATA.updateEmployee(id,{active:reactivate}); state.employeesCache=null; closeSheet(); toast('처리 완료','ok'); renderAdm(); } catch(e){ toast('실패: '+e.message,'err'); } }}]);
+}
+</script>
+<script>
+// =====================================================================
+//  PDF 근무기록지 — 생성 · PC 폴더 직접 저장 · 5일/25일 관리
+// =====================================================================
+const PDF_FOLDER_HINT = 'C:\\Users\\rexox\\OneDrive\\바탕 화면\\스랩 전용앱\\야근기록앱\\야근기록지';
+const FS = {
+  supported: () => 'showDirectoryPicker' in window,
+  idb() { return new Promise((res, rej) => { const r = indexedDB.open('ot2_fs', 1); r.onupgradeneeded = () => r.result.createObjectStore('kv'); r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); }); },
+  async get(k) { try { const d = await FS.idb(); return await new Promise((res,rej)=>{ const t=d.transaction('kv','readonly').objectStore('kv').get(k); t.onsuccess=()=>res(t.result); t.onerror=()=>rej(t.error); }); } catch { return null; } },
+  async set(k, v) { const d = await FS.idb(); return new Promise((res,rej)=>{ const t=d.transaction('kv','readwrite'); t.objectStore('kv').put(v,k); t.oncomplete=()=>res(); t.onerror=()=>rej(t.error); }); },
+  async handle() { return await FS.get('dir'); },
+  async connect() { const h = await window.showDirectoryPicker({ mode:'readwrite', id:'ot2-pdf', startIn:'desktop' }); await FS.set('dir', h); return h; },
+  async permitted(h, ask) { if (!h) return false; try { if ((await h.queryPermission({mode:'readwrite'}))==='granted') return true; if (!ask) return false; return (await h.requestPermission({mode:'readwrite'}))==='granted'; } catch { return false; } },
+  async write(h, name, blob) { const fh = await h.getFileHandle(name, {create:true}); const w = await fh.createWritable(); await w.write(blob); await w.close(); }
+};
+
+async function renderPdfTab(el) {
+  if (!state.pdfMonth) state.pdfMonth = prevMonthStr();
+  const month = state.pdfMonth, log1 = state.pdfLog[pdfKey(month,1)], log2 = state.pdfLog[pdfKey(month,2)];
+  if (!state.pdfRound) state.pdfRound = log1 ? 2 : 1;
+  const h = FS.supported() ? await FS.handle() : null; const ok = h ? await FS.permitted(h,false) : false;
+  const records = await DATA.listRecords({ month }); const sum = summarize(records); const names = [...new Set(records.map(r=>r.employeeName))];
+  const d = new Date(), dueMsg = d.getDate()<5 ? `이달 5일에 1차, 25일에 2차 저장 예정` : d.getDate()<25 ? `25일에 2차 저장 예정` : `이달 저장 기한 경과`;
+  el.innerHTML = `${reminderHtml()}
+    <div class="monthbar"><button onclick="state.pdfMonth=shiftMonth(state.pdfMonth,-1);state.pdfRound=0;renderAdm()">‹</button><span class="m">${monthLabel(month)} 근무기록지</span><button onclick="state.pdfMonth=shiftMonth(state.pdfMonth,1);state.pdfRound=0;renderAdm()">›</button></div>
+    <div class="card"><div class="card-title">저장 상태 <span class="tiny muted">${dueMsg}</span></div>
+      <div class="kv"><span>1차 (매월 5일)</span><b>${log1?`<span class="chip chip-ok">저장됨</span> ${fmtDT(log1.savedAt)}`:'<span class="chip chip-warn">미저장</span>'}</b></div>
+      <div class="kv"><span>2차 (매월 25일)</span><b>${log2?`<span class="chip chip-ok">저장됨</span> ${fmtDT(log2.savedAt)}`:'<span class="chip chip-warn">미저장</span>'}</b></div>
+      <div class="kv"><span>내용</span><b>${names.length}명 · ${records.length}건 · 야근 ${fmtMin(sum.ot)} / 특근 ${fmtMin(sum.sp)}</b></div>
+    </div>
+    <div class="card"><div class="card-title">PC 저장 폴더</div>
+      ${FS.supported() ? (h ? `<div class="kv"><span>연결 폴더</span><b>${esc(h.name)} ${ok?'<span class="chip chip-ok">사용 가능</span>':'<span class="chip chip-warn">권한 확인 필요</span>'}</b></div>` : `<div class="notice">아직 폴더가 연결되지 않았습니다. 아래 버튼으로 <b>야근기록지</b> 폴더를 한 번만 선택해 두면 이후엔 버튼 한 번으로 바로 저장됩니다.</div>`)
+        : `<div class="notice">이 기기(또는 브라우저)에서는 폴더 직접 저장이 안 됩니다. PC의 <b>크롬 또는 엣지</b>에서 열면 폴더에 바로 저장할 수 있고, 여기서는 다운로드 폴더로 내려받습니다.</div>`}
+      <div class="tiny muted" style="margin-top:6px;">권장 경로: ${esc(PDF_FOLDER_HINT)}</div>
+      ${FS.supported()?`<button class="btn btn-ghost btn-sm btn-full mt8" onclick="connectFolder()">${h?'다른 폴더로 변경':'저장 폴더 연결하기'}</button>`:''}
+    </div>
+    <div class="card"><div class="card-title">저장 차수</div>
+      <div class="filters" style="margin-bottom:0;"><button class="pill ${state.pdfRound===1?'on':''}" onclick="state.pdfRound=1;renderAdm()">1차 (5일)</button><button class="pill ${state.pdfRound===2?'on':''}" onclick="state.pdfRound=2;renderAdm()">2차 (25일)</button></div>
+      <div class="tiny muted mt8">파일 이름: ${esc(pdfFileName(month, state.pdfRound))}</div>
+    </div>
+    <div class="grid2"><button class="btn btn-ghost" onclick="previewPdf()">미리보기</button><button class="btn btn-primary" id="pdf-save-btn" onclick="savePdf()" ${records.length?'':'disabled'}>PDF 저장</button></div>
+    <div class="notice info mt12">PDF에는 직원별 상세·월 합계·야간시간·수정 횟수와 그 달의 수정·삭제 이력이 함께 담깁니다. 대표는 내용을 바꿀 수 없고, 직원 입력 그대로 출력됩니다.</div>
+    ${Object.keys(state.pdfLog).length?`<div class="sec-title">저장 기록</div><div class="list">${Object.entries(state.pdfLog).sort((a,b)=>b[0].localeCompare(a[0])).slice(0,12).map(([k,v])=>`<div class="setrow"><div class="ico"></div><div class="lbl">${esc(v.fileName||k)}<small>${fmtDT(v.savedAt)} · ${esc(v.by||'')} · ${v.where==='folder'?'폴더 저장':'다운로드'}</small></div></div>`).join('')}</div>`:''}`;
+}
+function pdfFileName(month, round) { const d=new Date(); return `근무기록지_${month}_${round}차_${d.getFullYear()}${pad(d.getMonth()+1)}${pad(d.getDate())}.pdf`; }
+async function connectFolder() {
+  try { const h = await FS.connect(); toast(`'${h.name}' 폴더가 연결되었습니다`,'ok'); renderAdm(); }
+  catch(e) { if (e.name!=='AbortError') toast('폴더 연결 실패: '+e.message,'err'); }
+}
+
+// ---- PDF HTML 생성 ----
+async function buildPdfHtml(month, round) {
+  const s = state.settings, [records, audits, employees] = await Promise.all([DATA.listRecords({month}), DATA.listAudit({month}), DATA.listEmployees(false)]);
+  const byEmp = {}; records.forEach(r => (byEmp[r.employeeId] = byEmp[r.employeeId] || []).push(r));
+  const order = Object.keys(byEmp).sort((a,b) => { const ia = employees.findIndex(e=>e.employeeId===a), ib = employees.findIndex(e=>e.employeeId===b); return (ia<0?999:ia)-(ib<0?999:ib); });
+  const now = new Date(), gen = `${now.getFullYear()}.${pad(now.getMonth()+1)}.${pad(now.getDate())} ${pad(now.getHours())}:${pad(now.getMinutes())}`;
+  const total = summarize(records);
+  const head = (title) => `<div class="pdf-head"><div style="display:flex;align-items:center;gap:14px;">${s.logo?`<img src="${s.logo}">`:''}<div><div class="co">${esc(s.companyName)}</div><h1>${title}</h1></div></div><div class="pdf-meta"><b>${monthLabel(month)}</b><br>${round}차 보관본 · 출력 ${gen}<br>출력자 ${esc(state.user.name)}</div></div>`;
+  const foot = (p, n) => `<div class="pdf-foot"><span>${esc(s.companyName)} · 근무기록지 ${monthLabel(month)} · ${APP_VER}</span><span>${p} / ${n}</span></div>`;
+  const pages = [];
+  // 1. 요약
+  pages.push(`${head('근무기록지 (연장·휴일근로)')}
+    <div class="pdf-sec">월 합계 요약</div>
+    <table class="pdf-table"><tr><th>직원</th><th>사번</th><th>야근 일수</th><th>야근 시간</th><th>특근 일수</th><th>특근 시간</th><th>야간(22~06)</th><th>총 시간</th>${s.showPremium?'<th>가산 환산(h)</th>':''}<th>수정</th></tr>
+      ${order.map(id=>{ const rs=byEmp[id], ss=summarize(rs); return `<tr><td class="l"><b>${esc(rs[0].employeeName)}</b></td><td>${esc(id)}</td><td>${ss.otDays}</td><td>${fmtMin(ss.ot)}</td><td>${ss.spDays}</td><td>${fmtMin(ss.sp)}</td><td>${fmtMin(ss.night)}</td><td><b>${fmtMin(ss.total)}</b><br><span style="color:#777">${fmtH(ss.total)}h</span></td>${s.showPremium?`<td>${ss.premium.toFixed(2)}</td>`:''}<td class="${ss.edits?'edited':''}">${ss.edits||'-'}</td></tr>`; }).join('')}
+      <tr class="tot"><td class="l">합계</td><td>${order.length}명</td><td>${total.otDays}</td><td>${fmtMin(total.ot)}</td><td>${total.spDays}</td><td>${fmtMin(total.sp)}</td><td>${fmtMin(total.night)}</td><td>${fmtMin(total.total)}<br><span style="color:#777">${fmtH(total.total)}h</span></td>${s.showPremium?`<td>${total.premium.toFixed(2)}</td>`:''}<td>${total.edits||'-'}</td></tr></table>
+    <div class="pdf-note">• 야근 = 정규 퇴근(${s.workEnd}) 이후 실제 퇴근까지 · 특근 = 휴일·주말 근무(휴게 제외) · 야간 = 22:00~06:00 사이 근무분(근로기준법 제56조 ③ 기준, 별도 집계)<br>• 적용 기준: ${s.lawMode==='over5'?'상시 5인 이상 사업장 — 연장·야간·휴일 가산(제56조), 주 12시간 한도(제53조) 적용':'상시 5인 미만 사업장 — 가산수당(제56조)·주 12시간 한도(제53조) 법정 적용 제외, 근로계약 약정에 따름'} (근로기준법 시행 2026.10.8. 기준)<br>• ${esc(s.pdfFooter||'')}</div>
+    <div class="pdf-sign"><div>${esc(s.pdfSignEmp||'직원 확인')} <span>(서명)</span></div><div>${esc(s.pdfSignBoss||'대표 확인')} <span>(서명)</span></div></div>`);
+  // 2. 직원별 상세
+  order.forEach(id => {
+    const rs = byEmp[id].slice().sort((a,b)=>a.date.localeCompare(b.date)), ss = summarize(rs);
+    const chunks = []; for (let i=0;i<rs.length;i+=26) chunks.push(rs.slice(i,i+26));
+    chunks.forEach((chunk, ci) => {
+      pages.push(`${head(`${esc(rs[0].employeeName)} 상세 기록${chunks.length>1?` (${ci+1}/${chunks.length})`:''}`)}
+        <div class="pdf-sec">${esc(rs[0].employeeName)} (사번 ${esc(id)}) · 야근 ${ss.otDays}일 ${fmtMin(ss.ot)} · 특근 ${ss.spDays}일 ${fmtMin(ss.sp)} · 야간 ${fmtMin(ss.night)} · 합계 ${fmtMin(ss.total)}</div>
+        <table class="pdf-table"><tr><th style="width:62px">날짜</th><th style="width:34px">요일</th><th style="width:44px">구분</th><th>근무 시간</th><th style="width:48px">휴게</th><th style="width:70px">근무</th><th style="width:60px">야간</th><th>메모</th><th style="width:40px">수정</th></tr>
+          ${chunk.map(r=>{ const c=recCalc(r), i=dateInfo(r.date), sp=r.type==='special'; return `<tr><td>${r.date.slice(5).replace('-','/')}</td><td style="${i.weekend?'color:#DC2626;font-weight:700':''}">${i.wd}</td><td><span class="pdf-chip ${sp?'sp':'ot'}">${sp?'특근':'야근'}</span></td><td>${esc(sp?`${r.startTime} ~ ${r.endTime}`:`${r.workEndTime||s.workEnd} → ${r.actualEndTime}`)}</td><td>${sp&&r.breakMinutes?r.breakMinutes+'분':'-'}</td><td><b>${fmtMin(c.minutes)}</b></td><td>${c.night?fmtMin(c.night):'-'}</td><td class="l">${esc(r.note||'')}</td><td class="${r.editCount?'edited':''}">${r.editCount||'-'}</td></tr>`; }).join('')}
+          ${ci===chunks.length-1?`<tr class="tot"><td colspan="5" class="l">월 합계</td><td>${fmtMin(ss.total)}</td><td>${fmtMin(ss.night)}</td><td class="l">${fmtH(ss.total)}시간${s.showPremium?` · 가산 환산 ${ss.premium.toFixed(2)}h`:''}</td><td>${ss.edits||'-'}</td></tr>`:''}</table>`);
+    });
+  });
+  // 3. 수정·삭제 이력
+  const lab = {create:'등록',update:'수정',delete:'삭제',pin_reset:'PIN 초기화',pdf:'PDF 저장',import:'과거 기록 가져오기',import_undo:'가져오기 취소'};
+  const hist = audits.filter(a=>a.action==='update'||a.action==='delete'||a.action==='import'||a.action==='import_undo'||(a.action==='create'&&/지난 날짜|직접 입력/.test(a.reason||''))).sort((a,b)=>(a.timestamp?.toMillis?.()||+new Date(a.timestamp||0))-(b.timestamp?.toMillis?.()||+new Date(b.timestamp||0)));
+  const hchunks = []; for (let i=0;i<hist.length;i+=28) hchunks.push(hist.slice(i,i+28)); if (!hchunks.length) hchunks.push([]);
+  hchunks.forEach((chunk, ci) => {
+    pages.push(`${head('수정·삭제 이력')}
+      <div class="pdf-sec">${monthLabel(month)} 기록에 대한 변경 이력 ${hist.length}건${hchunks.length>1?` (${ci+1}/${hchunks.length})`:''}</div>
+      ${chunk.length?`<table class="pdf-table"><tr><th style="width:92px">일시</th><th style="width:60px">구분</th><th style="width:64px">작성자</th><th style="width:62px">대상일</th><th>변경 내용</th><th>사유</th></tr>
+        ${chunk.map(h=>`<tr><td>${fmtDT(h.timestamp)}</td><td>${lab[h.action]||esc(h.action)}</td><td>${esc(h.modifiedByName||h.modifiedBy)}</td><td>${h.targetDate?h.targetDate.slice(5).replace('-','/'):'-'}</td><td class="l">${diffText(h)}</td><td class="l">${esc(h.reason||'')}</td></tr>`).join('')}</table>`:`<div class="pdf-note">이 달에는 수정·삭제·지난 날짜 추가 이력이 없습니다. 모든 기록이 당일 입력 그대로입니다.</div>`}
+      <div class="pdf-note" style="margin-top:14px;">• 이 이력은 앱 서버(Firebase)의 감사 기록에서 자동 생성되며, 대표를 포함한 누구도 편집할 수 없습니다.</div>`);
+  });
+  return `<div id="pdf-doc">${pages.map((p,i)=>`<div class="pdf-page">${p}${foot(i+1,pages.length)}</div>`).join('')}</div>`;
+}
+function diffText(h) {
+  const b=h.before, a=h.after;
+  if (b && !a) return `삭제: ${b.type==='special'?`특근 ${b.startTime}~${b.endTime}`:`야근 퇴근 ${b.actualEndTime}`}${b.note?` (${esc(b.note)})`:''}`;
+  if (!b && a) return `${h.action==='import'?'과거 기록 가져오기':'추가'}: ${a.type==='special'?`특근 ${a.startTime}~${a.endTime}`:`야근 퇴근 ${a.actualEndTime}`}`;
+  const t = diffHtml(h).replace(/<[^>]+>/g,''); return t || '변경 없음';
+}
+async function makePdfBlob(month, round) {
+  const root = document.getElementById('pdf-root'); root.innerHTML = await buildPdfHtml(month, round);
+  await new Promise(r => setTimeout(r, 150));
+  const opt = { margin:0, filename:pdfFileName(month,round), image:{type:'jpeg',quality:0.95}, html2canvas:{scale:2,useCORS:true,backgroundColor:'#ffffff',windowWidth:794}, jsPDF:{unit:'mm',format:'a4',orientation:'portrait'}, pagebreak:{mode:['css','legacy'],avoid:['tr','.pdf-sign']} };
+  const blob = await html2pdf().set(opt).from(root.firstElementChild).outputPdf('blob');
+  root.innerHTML = ''; return blob;
+}
+async function previewPdf() {
+  // 새 창은 버튼을 누른 직후에 연다(생성이 끝난 뒤 열면 팝업 차단에 걸림) — 2026-11-09
+  let w = null; try { w = window.open('', '_blank'); if (w) w.document.write('<title>미리보기 생성 중</title><p style="font-family:sans-serif;padding:24px;color:#334155">근무기록지 PDF 미리보기를 만들고 있습니다…</p>'); } catch(e) { w = null; }
+  toast('미리보기 생성 중...');
+  try { const blob = await makePdfBlob(state.pdfMonth, state.pdfRound||1); const url = URL.createObjectURL(blob); if (w && !w.closed) w.location.href = url; else { const a=document.createElement('a'); a.href=url; a.target='_blank'; a.click(); } }
+  catch(e) { try { if (w) w.close(); } catch(_){} toast('실패: '+e.message,'err'); console.error(e); }
+}
+async function savePdf() {
+  const month = state.pdfMonth, round = state.pdfRound||1, key = pdfKey(month, round);
+  if (state.pdfLog[key]) { const ok = await new Promise(res => confirmDlg('','이미 저장됨',`${monthLabel(month)} ${round}차는 ${fmtDT(state.pdfLog[key].savedAt)}에 저장되었습니다.\n다시 저장할까요?`,[{label:'취소',fn:()=>res(false)},{label:'다시 저장',cls:'btn-primary',fn:()=>res(true)}])); if (!ok) return; }
+  // 폴더 선택·권한 창은 PDF를 만들기 전에 띄운다. 생성(수 초~수십 초)이 끝난 뒤에는 브라우저가 버튼 클릭을 "사용자 동작"으로 보지 않아 창이 안 열리고 저장이 실패했다(2026-11-09)
+  let h = null, where = 'download';
+  if (FS.supported()) {
+    h = await FS.handle();
+    if (!h) { try { h = await FS.connect(); } catch(e) { if (e.name!=='AbortError') console.warn('폴더 선택 실패', e); h = null; } }
+    if (h) { if (await FS.permitted(h, true)) where = 'folder'; else toast('폴더 사용 권한이 없어 다운로드 폴더로 저장합니다','warn'); }
+  }
+  const btn = document.getElementById('pdf-save-btn'); btn.disabled = true; btn.innerHTML = '<span class="spin"></span> 생성 중';
+  try {
+    const blob = await makePdfBlob(month, round), name = pdfFileName(month, round);
+    if (where === 'folder') { try { await FS.write(h, name, blob); } catch(e) { console.warn('폴더 쓰기 실패', e); where = 'download'; toast('폴더에 쓰지 못해 다운로드로 저장합니다: '+(e.message||e),'warn'); } }
+    if (where === 'download') { const url = URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download=name; a.click(); setTimeout(()=>URL.revokeObjectURL(url), 5000); }
+    const info = { savedAt: new Date().toISOString(), by: state.user.name, fileName: name, where };
+    await DATA.setPdfLog(key, info);
+    await DATA.addAudit({ action:'pdf', recordId:'pdf_'+key, before:null, after:info, reason:`${monthLabel(month)} ${round}차 근무기록지 PDF ${where==='folder'?'폴더 저장':'다운로드'}`, modifiedBy:state.user.employeeId, modifiedByName:state.user.name, modifiedByRole:state.user.role, targetEmployee:'', targetEmployeeName:'', targetDate:month+'-01' });
+    toast(where==='folder'?`PDF가 폴더에 저장되었습니다: ${name}`:`PDF를 다운로드했습니다: ${name}`,'ok'); renderAdm();
+  } catch(e) { console.error(e); toast('PDF 저장 실패: '+e.message,'err'); btn.disabled=false; btn.textContent='PDF 저장'; }
+}
+
+// =====================================================================
+//  홈 화면 설치
+// =====================================================================
+let _installPrompt = null, _bannerShown = false;
+window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); _installPrompt = e; if (state.user) showInstallBanner(); });
+window.addEventListener('appinstalled', () => { hideInstallBanner(); _installPrompt = null; });
+function isStandalone() { return window.navigator.standalone || window.matchMedia('(display-mode: standalone)').matches; }
+function showInstallBanner() {
+  if (_bannerShown || isStandalone() || !state.user || Pref.get('install_dismissed','')) return; _bannerShown = true;
+  const b = document.createElement('div'); b.id='install-banner'; b.style.cssText = 'position:fixed;left:12px;right:12px;bottom:calc(var(--nav-h) + var(--safe-b) + 10px);z-index:40;background:var(--bg-elev);border:1px solid var(--line);border-radius:16px;padding:12px 14px;display:flex;gap:10px;align-items:center;box-shadow:var(--shadow-lg);max-width:536px;margin:0 auto;';
+  b.innerHTML = `<div style="font-size:24px"></div><div style="flex:1;min-width:0"><div style="font-weight:800;font-size:14px">홈 화면에 앱 추가</div><div class="tiny muted">아이콘 한 번으로 바로 열 수 있어요</div></div><button class="btn btn-primary btn-sm" onclick="triggerInstall()">추가</button><button class="btn btn-ghost btn-sm" onclick="hideInstallBanner(true)"></button>`;
+  document.body.appendChild(b);
+}
+function hideInstallBanner(dismiss) { const b=document.getElementById('install-banner'); if (b) b.remove(); if (dismiss) Pref.set('install_dismissed','1'); }
+async function triggerInstall() { if (_installPrompt) { _installPrompt.prompt(); await _installPrompt.userChoice; _installPrompt=null; hideInstallBanner(); } else showInstallGuide(); }
+function showInstallGuide() {
+  const ios = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+  if (isStandalone()) { toast('이미 홈 화면에 설치되어 있습니다','ok'); return; }
+  const steps = ios ? ['Safari 하단 가운데 <b>공유 버튼 (□↑)</b> 탭','목록에서 <b>"홈 화면에 추가"</b> 탭','오른쪽 위 <b>"추가"</b> 탭 → 완료'] : ['Chrome 주소창 오른쪽 <b>설치 아이콘(⊕)</b> 또는 ⋮ 메뉴 → <b>"앱 설치"</b>','<b>"설치"</b> 탭 → 완료'];
+  openSheet(`<div class="sheet-title">홈 화면에 앱 추가</div><div class="sheet-sub">${ios?'iPhone · Safari 기준':'Android · Chrome 기준'}</div>${steps.map((t,i)=>`<div class="install-step"><div class="n">${i+1}</div><div>${t}</div></div>`).join('')}${ios?'<div class="notice">반드시 Safari에서 진행해야 합니다</div>':''}<div class="sheet-foot"><button class="btn btn-primary" onclick="closeSheet()">확인</button></div>`);
+}
+
+// =====================================================================
+//  과거 기록 가져오기 (대표 전용) — 엑셀·CSV·붙여넣기 → 미리보기 → 묶음 저장 · 취소 · 데이터 정리
+// =====================================================================
+const IMP = { rows: [], unknown: {}, fileName: '', table: null };
+const IMP_HEAD = {
+  date:['날짜','일자','근무일','date','day'], name:['이름','성명','직원','직원명','name','employee','employeename'], empId:['사번','employeeid','empid','id'],
+  end:['퇴근','퇴근시간','실제퇴근','실제퇴근시간','actualendtime','actualend','end'], start:['시작','시작시간','출근','starttime','start'], endSp:['종료','종료시간','endtime'],
+  brk:['휴게','휴게분','휴게(분)','break','breakminutes'], type:['유형','구분','type'], note:['메모','비고','note','memo'], workEnd:['정규퇴근','workendtime']
+};
+const impNorm = v => String(v??'').trim().toLowerCase().replace(/\s+/g,'');
+function impHeadKey(cell) { const c = impNorm(cell); if (!c) return null; for (const [k, names] of Object.entries(IMP_HEAD)) if (names.includes(c)) return k; return null; }
+// 시간: "21:12" "2112" "21시12분" "9:5" / Date 객체 / 엑셀 소수(0.88) → "HH:MM"
+function impTime(v) {
+  if (v instanceof Date && !isNaN(v)) return `${pad(v.getHours())}:${pad(v.getMinutes())}`;
+  if (typeof v === 'number') { if (v >= 0 && v < 1) { const m = Math.round(v*1440); return `${pad(Math.floor(m/60)%24)}:${pad(m%60)}`; } if (v >= 100 && v <= 2959 && Number.isInteger(v)) return `${pad(Math.floor(v/100))}:${pad(v%100)}`; return null; }
+  const s = String(v??'').trim(); if (!s) return null;
+  let m = s.match(/^(\d{1,2})\s*[:시.]\s*(\d{1,2})\s*분?$/); if (m) return `${pad(+m[1])}:${pad(+m[2])}`;
+  m = s.match(/^(\d{1,2})\s*시$/); if (m) return `${pad(+m[1])}:00`;
+  m = s.match(/^(\d{3,4})$/); if (m) { const n=+m[1]; return `${pad(Math.floor(n/100))}:${pad(n%100)}`; }
+  m = s.match(/(\d{1,2}):(\d{2})/); if (m) return `${pad(+m[1])}:${m[2]}`;
+  return null;
+}
+// 날짜: "2026-02-02" "2026.2.2" "2/2" "2일" / Date / 엑셀 일련번호 → "YYYY-MM-DD" (연·월이 없으면 기본값 사용)
+function impDate(v, defY, defM) {
+  if (v instanceof Date && !isNaN(v)) return `${v.getFullYear()}-${pad(v.getMonth()+1)}-${pad(v.getDate())}`;
+  if (typeof v === 'number') { if (v > 20000 && v < 80000 && typeof XLSX !== 'undefined') { const d = XLSX.SSF.parse_date_code(v); return `${d.y}-${pad(d.m)}-${pad(d.d)}`; } if (v >= 1 && v <= 31 && defY && defM) return `${defY}-${pad(defM)}-${pad(v)}`; return null; }
+  const s = String(v??'').trim(); if (!s) return null;
+  let m = s.match(/^(\d{4})[-./년\s]+(\d{1,2})[-./월\s]+(\d{1,2})일?/); if (m) return `${m[1]}-${pad(+m[2])}-${pad(+m[3])}`;
+  m = s.match(/^(\d{2})[-./](\d{1,2})[-./](\d{1,2})$/); if (m) return `20${m[1]}-${pad(+m[2])}-${pad(+m[3])}`;
+  m = s.match(/^(\d{1,2})[-./월\s]+(\d{1,2})일?(?:\s*\(.+\))?$/); if (m && defY) return `${defY}-${pad(+m[1])}-${pad(+m[2])}`;
+  m = s.match(/^(\d{1,2})일?(?:\s*\(.+\))?$/); if (m && defY && defM) return `${defY}-${pad(defM)}-${pad(+m[1])}`;
+  return null;
+}
+const impValidDate = d => !!d && /^\d{4}-\d{2}-\d{2}$/.test(d) && !isNaN(new Date(d+'T00:00:00')) && d <= todayStr();
+function impType(v) { const c = impNorm(v); if (!c) return null; if (/특근|휴일|주말|special|holiday/.test(c)) return 'special'; if (/야근|연장|overtime|ot/.test(c)) return 'overtime'; return null; }
+// 시트 이름에서 연·월 추출: "2026_2월" "2026-07" "7월" 등
+function impSheetYM(name) { const s = String(name||''); const y = (s.match(/(20\d{2})/)||[])[1]; const m = (s.match(/(?:^|[^\d])(\d{1,2})\s*월/)||s.match(/20\d{2}[-._/](\d{1,2})/)||[])[1]; return { y: y?+y:null, m: m?+m:null }; }
+
+// 붙여넣은 글 → 2차원 표
+function impParseText(txt) {
+  const lines = String(txt||'').split(/\r?\n/).filter(l => l.trim());
+  const sep = lines.some(l => l.includes('\t')) ? '\t' : lines.some(l => l.includes(',')) ? ',' : null;
+  return lines.map(l => sep ? l.split(sep).map(c => c.trim().replace(/^"|"$/g,'')) : l.trim().split(/\s{2,}|\s/));
+}
+// 2차원 표 → 기록 후보 목록. 세로형(날짜·이름·시간 열) 또는 가로형(직원 이름이 열 머리) 자동 판별
+function impTableToRows(table, employees, defY, defM, sheetName) {
+  const out = []; if (!table || !table.length) return out;
+  const empByName = {}; employees.forEach(e => { empByName[impNorm(e.name)] = e; });
+  // 1) 세로형: 머리줄에 알려진 제목이 2개 이상
+  let hi = -1, map = {};
+  for (let i=0; i<Math.min(table.length, 15); i++) { const m = {}; table[i].forEach((c,j) => { const k = impHeadKey(c); if (k && m[k]===undefined) m[k]=j; }); if (Object.keys(m).length >= 2 && (m.date!==undefined)) { hi = i; map = m; break; } }
+  if (hi >= 0) {
+    for (let i=hi+1; i<table.length; i++) { const r = table[i]; if (!r || !r.some(c => String(c??'').trim())) continue;
+      const g = k => map[k]===undefined ? '' : r[map[k]];
+      const row = { line: `${sheetName?sheetName+' ':''}${i+1}행`, date: impDate(g('date'), defY, defM), name: String(g('name')??'').trim(), empId: String(g('empId')??'').trim(), note: String(g('note')??'').trim() };
+      const t = impType(g('type')); let st = impTime(g('start')), en = impTime(g('endSp')), end = impTime(g('end'));
+      const rng = String(g('end')??'').match(/(\d{1,2}:\d{2})\s*[~\-]\s*(\d{1,2}:\d{2})/); if (rng) { st = rng[1]; en = rng[2]; end = null; }   // 퇴근 칸에 "09:00~18:00"이면 특근
+      if (t === 'special' || (!end && st && en)) { row.type='special'; row.startTime=st; row.endTime=en; const bm = String(g('brk')??'').trim(); row.breakMinutes = bm==='' ? -1 : (parseInt(bm,10)||0); }   // -1 = 휴게 칸 없음 → 자동 제안
+      else { row.type='overtime'; row.actualEndTime = end || en; row.workEndTime = impTime(g('workEnd')) || null; }
+      out.push(row); }
+    return out;
+  }
+  // 2) 가로형: 어떤 줄에 직원 이름이 2개 이상 → 그 줄이 머리줄, 각 이름 열의 값 = 퇴근 시간
+  for (let i=0; i<Math.min(table.length, 15); i++) {
+    const cols = []; table[i].forEach((c,j) => { const e = empByName[impNorm(c)]; if (e) cols.push({ j, e }); });
+    if (cols.length >= 2) {
+      const first = cols[0].j, ym = impSheetYM(sheetName); const y = ym.y || defY, m = ym.m || defM;
+      for (let r=i+1; r<table.length; r++) { const row = table[r]; if (!row) continue;
+        // 날짜: 이름 열 앞쪽 칸에서 찾는다 (한 칸에 날짜 / 연·월·일이 나뉜 칸 / 일만 있는 칸)
+        let date = null; const pre = row.slice(0, first);
+        for (const c of pre) { const d = impDate(c, y, m); if (d && /^\d{4}-\d{2}-\d{2}$/.test(d) && !(typeof c === 'number' && c <= 31)) { date = d; break; } }
+        if (!date) { const nums = pre.map(c => typeof c === 'number' ? c : (String(c??'').trim().match(/^\d{1,4}$/) ? +c : null)).filter(n => n!==null);
+          if (nums.length >= 3 && nums[0] > 1900) date = `${nums[0]}-${pad(nums[1])}-${pad(nums[2])}`; else if (nums.length === 2 && y) date = `${y}-${pad(nums[0])}-${pad(nums[1])}`; else if (nums.length === 1 && y && m) date = `${y}-${pad(m)}-${pad(nums[0])}`; }
+        if (!date) continue;
+        cols.forEach(({j, e}) => { const v = row[j]; const sv = String(v??'').trim(); if (!sv || /^[-–—xX×]$|정시|휴무|휴가|없음|^0$/.test(sv)) return;
+          const sp = sv.match(/(\d{1,2}:\d{2})\s*[~\-]\s*(\d{1,2}:\d{2})/);
+          if (sp) out.push({ line:`${sheetName?sheetName+' ':''}${r+1}행`, date, name:e.name, empId:e.employeeId, type:'special', startTime:sp[1], endTime:sp[2], breakMinutes:-1, note:'' });
+          else { const t = impTime(v); out.push({ line:`${sheetName?sheetName+' ':''}${r+1}행`, date, name:e.name, empId:e.employeeId, type:'overtime', actualEndTime:t, raw: t?undefined:sv, note:'' }); } });
+      }
+      return out;
+    }
+  }
+  return out;
+}
+
+function openImport() {
+  if (state.user.role !== 'superadmin') { toast('대표만 할 수 있습니다','err'); return; }
+  const d = new Date();
+  IMP.rows = []; IMP.unknown = {}; IMP.fileName = ''; IMP.table = null;
+  openSheet(`<div class="sheet-title">과거 기록 가져오기</div><div class="sheet-sub">예전 야근 기록(엑셀·CSV·메모장 붙여넣기)을 한 번에 넣습니다. 넣기 전에 미리보기로 확인하고, 잘못 넣으면 묶음째 취소할 수 있습니다.</div>
+    <div class="card" style="margin-bottom:12px;">
+      <div class="card-title">1. 자료 넣기</div>
+      <label class="btn btn-ghost btn-full" style="cursor:pointer;">엑셀(.xlsx) 또는 CSV 파일 고르기<input type="file" accept=".xlsx,.xls,.csv,.txt" class="hidden" onchange="impFile(this)"></label>
+      <div class="tiny muted mt8" id="imp-file"></div>
+      <div class="field mt12"><label>또는 붙여넣기 (한 줄에 하나 · 탭/쉼표/띄어쓰기 구분)</label><textarea class="textarea" id="imp-text" placeholder="날짜  이름  퇴근시간  메모
+2026-07-01  홍길동  21:30
+2026-07-05  홍길동  09:00~18:00  토요일 출근
+(또는 엑셀 표를 그대로 복사해 붙여넣기)"></textarea></div>
+      <div class="grid2"><div class="field"><label>연도 (자료에 없을 때)</label><input id="imp-y" inputmode="numeric" value="${d.getFullYear()}"></div><div class="field"><label>월 (자료에 없을 때)</label><input id="imp-m" inputmode="numeric" placeholder="예: 7"></div></div>
+      <div class="tiny muted">• 세로형: 날짜 · 이름(또는 사번) · 퇴근시간 열, 특근은 시작 · 종료 · 휴게 열 또는 "09:00~18:00"<br>• 가로형: 첫 줄에 직원 이름, 아래로 날짜별 퇴근시간 (예전 엑셀 퇴근시간표 그대로)<br>• 정규 퇴근(${state.settings.workEnd}) 전 시각은 야근 0분이라 건너뜁니다 · 이미 있는 날짜는 건너뜁니다(덮어쓰지 않음)</div>
+      <div class="grid2 mt12"><button class="btn btn-ghost" onclick="impTemplate()">양식 CSV 받기</button><button class="btn btn-primary" onclick="impAnalyze()">분석 · 미리보기</button></div>
+    </div>
+    <div id="imp-result"></div>
+    <div class="sheet-foot"><button class="btn btn-ghost" onclick="closeSheet()">닫기</button></div>`);
+}
+function impTemplate() {
+  const csv = '날짜,이름,유형,퇴근시간,시작,종료,휴게(분),메모\n2026-07-01,홍길동,야근,21:30,,,,\n2026-07-05,홍길동,특근,,09:00,18:00,60,토요일 출근\n';
+  const blob = new Blob(['﻿'+csv],{type:'text/csv;charset=utf-8;'}); const url=URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download='과거기록_양식.csv'; a.click(); URL.revokeObjectURL(url);
+}
+function impFile(input) {
+  const f = input.files[0]; if (!f) return; IMP.fileName = f.name;
+  const rd = new FileReader();
+  rd.onload = e => { try {
+      if (/\.(xlsx|xls)$/i.test(f.name)) { const wb = XLSX.read(new Uint8Array(e.target.result), { type:'array', cellDates:true }); IMP.table = wb.SheetNames.map(n => ({ name:n, rows: XLSX.utils.sheet_to_json(wb.Sheets[n], { header:1, defval:'' }) })); }
+      else { const txt = new TextDecoder('utf-8').decode(new Uint8Array(e.target.result)); IMP.table = [{ name:'', rows: impParseText(txt.replace(/^﻿/,'')) }]; }
+      document.getElementById('imp-file').innerHTML = `${esc(f.name)} · 시트 ${IMP.table.length}개 · ${IMP.table.reduce((a,t)=>a+t.rows.length,0)}줄`;
+      const ym = impSheetYM(IMP.table[0].name); if (ym.y) document.getElementById('imp-y').value = ym.y; if (ym.m) document.getElementById('imp-m').value = ym.m;
+    } catch(err) { toast('파일을 읽지 못했습니다: '+err.message,'err'); } };
+  rd.readAsArrayBuffer(f);
+}
+async function impAnalyze() {
+  const box = document.getElementById('imp-result'); box.innerHTML = loadingHtml();
+  try {
+    const employees = await DATA.listEmployees(false), s = state.settings;
+    const defY = parseInt(document.getElementById('imp-y').value,10)||null, defM = parseInt(document.getElementById('imp-m').value,10)||null;
+    const txt = document.getElementById('imp-text').value.trim();
+    const tables = txt ? [{ name:'', rows: impParseText(txt) }] : (IMP.table||[]);
+    if (!tables.length) { box.innerHTML = '<div class="notice danger">파일을 고르거나 붙여넣기 칸에 내용을 넣어 주세요.</div>'; return; }
+    let rows = []; tables.forEach(t => rows = rows.concat(impTableToRows(t.rows, employees, defY, defM, t.name)));
+    if (!rows.length) { box.innerHTML = '<div class="notice danger">기록을 찾지 못했습니다. 첫 줄에 "날짜 · 이름 · 퇴근시간" 같은 제목이 있거나, 첫 줄에 직원 이름들이 있어야 합니다.</div>'; return; }
+    // 직원 연결
+    const byId = {}, byName = {}; employees.forEach(e => { byId[e.employeeId] = e; byName[impNorm(e.name)] = e; });
+    const months = new Set(); rows.forEach(r => { if (impValidDate(r.date)) months.add(r.date.slice(0,7)); });
+    const existing = new Set(); for (const m of months) (await DATA.listRecords({ month:m })).forEach(r => existing.add(`${r.employeeId}|${r.date}|${r.type||'overtime'}`));
+    const seen = new Set(); const chosen = IMP.unknown || {}; IMP.unknown = {};   // 지난 분석에서 고른 연결(직원 사번 / '__skip')은 유지
+    rows.forEach(r => {
+      const known = (r.empId && byId[r.empId]) || byName[impNorm(r.name)] || null;
+      const pick = (!known && r.name) ? (chosen[r.name] || '') : '';
+      if (!known && r.name) IMP.unknown[r.name] = pick;
+      if (!known && pick === '__skip') { r.status = 'skip'; r.msg = '건너뜀 (직원 연결 안 함)'; return; }
+      const e = known || (pick ? byId[pick] : null);
+      if (!e) { r.status = 'unknown'; r.msg = `직원 못 찾음: ${r.name||r.empId||'(이름 없음)'}`; return; }
+      r.emp = e;
+      if (!impValidDate(r.date)) { r.status='error'; r.msg = r.date ? `날짜 이상: ${r.date}` : '날짜 없음'; return; }
+      if (r.type === 'special') { if (!r.startTime || !r.endTime) { r.status='error'; r.msg='특근 시작·종료 시간 없음'; return; } if (r.breakMinutes < 0) { r.breakMinutes = autoBreak(calcSpecial(r.startTime, r.endTime, 0).gross); if (r.breakMinutes) r.msg = `휴게 ${r.breakMinutes}분 자동 적용`; } const c = calcSpecial(r.startTime, r.endTime, r.breakMinutes||0); if (c.minutes <= 0) { r.status='error'; r.msg='특근 0분'; return; } r.minutes = c.minutes; r.night = c.night; }
+      else { if (!r.actualEndTime) { r.status='error'; r.msg = r.raw ? `퇴근시간 못 읽음: ${r.raw}` : '퇴근시간 없음'; return; } const we = r.workEndTime || s.workEnd; const c = calcOvertime(we, r.actualEndTime); if (c.minutes <= 0) { r.status='skip'; r.msg=`정규 퇴근(${we}) 이전 → 야근 0분`; return; } r.workEndTime = we; r.minutes = c.minutes; r.night = c.night; }
+      const key = `${e.employeeId}|${r.date}|${r.type}`;
+      if (existing.has(key)) { r.status='dup'; r.msg='이미 있는 기록'; return; }
+      if (seen.has(key)) { r.status='dup'; r.msg='자료 안에서 중복'; return; }
+      seen.add(key); r.status='ok';
+    });
+    IMP.rows = rows;
+    impRenderPreview(employees);
+  } catch(e) { console.error(e); box.innerHTML = errorHtml(e, 'impAnalyze()'); }
+}
+function impRenderPreview(employees) {
+  const rows = IMP.rows, box = document.getElementById('imp-result');
+  const n = k => rows.filter(r => r.status===k).length, ok = n('ok');
+  const unk = Object.keys(IMP.unknown);
+  const chip = { ok:'<span class="chip chip-ok">저장</span>', dup:'<span class="chip chip-gray">중복</span>', skip:'<span class="chip chip-warn">건너뜀</span>', error:'<span class="chip chip-danger">오류</span>', unknown:'<span class="chip chip-danger">직원?</span>' };
+  const months = [...new Set(rows.filter(r=>r.status==='ok').map(r=>r.date.slice(0,7)))].sort();
+  box.innerHTML = `<div class="card" style="margin-bottom:12px;"><div class="card-title">2. 미리보기</div>
+      <div class="stats" style="grid-template-columns:repeat(4,1fr);"><div class="stat accent"><div class="k">저장</div><div class="v">${ok}</div></div><div class="stat"><div class="k">중복</div><div class="v">${n('dup')}</div></div><div class="stat"><div class="k">건너뜀</div><div class="v">${n('skip')}</div></div><div class="stat ${n('error')+n('unknown')?'night':''}"><div class="k">오류</div><div class="v">${n('error')+n('unknown')}</div></div></div>
+      ${months.length?`<div class="tiny muted mb8">저장 대상 달: ${months.map(monthLabel).join(' · ')} · 직원 ${[...new Set(rows.filter(r=>r.status==='ok').map(r=>r.emp.name))].join(', ')}</div>`:''}
+      ${unk.length?`<div class="notice">이름을 못 찾은 사람이 있습니다. 누구인지(또는 건너뛰기) 고르고 "다시 분석"을 누르세요. 고른 내용은 다시 분석해도 유지됩니다.<div class="mt8">${unk.map(nm=>`<div class="kv"><span>${esc(nm)}</span><select class="inline" style="max-width:160px;" onchange="IMP.unknown['${esc(nm)}']=this.value"><option value="">고르세요</option><option value="__skip" ${IMP.unknown[nm]==='__skip'?'selected':''}>건너뛰기 (안 넣음)</option>${employees.map(e=>`<option value="${esc(e.employeeId)}" ${IMP.unknown[nm]===e.employeeId?'selected':''}>${esc(e.name)} (${esc(e.employeeId)})</option>`).join('')}</select></div>`).join('')}</div><button class="btn btn-ghost btn-sm btn-full mt8" onclick="impAnalyze()">다시 분석</button></div>`:''}
+      <div style="overflow:auto;max-height:300px;border:1px solid var(--line);border-radius:12px;"><table class="imp-table"><tr><th>상태</th><th>날짜</th><th>직원</th><th>구분</th><th>시간</th><th>근무</th><th>비고</th></tr>
+        ${rows.slice(0,300).map(r=>`<tr class="${r.status}"><td>${chip[r.status]||''}</td><td>${esc(r.date||'')}</td><td>${esc(r.emp?r.emp.name:(r.name||r.empId||''))}</td><td>${r.type==='special'?'특근':'야근'}</td><td>${esc(r.type==='special'?`${r.startTime||'?'}~${r.endTime||'?'}${r.breakMinutes?` (휴게 ${r.breakMinutes})`:''}`:(r.actualEndTime||r.raw||''))}</td><td>${r.minutes?fmtMin(r.minutes):'-'}</td><td class="l">${esc(r.msg||r.note||'')}<span class="tiny muted"> ${esc(r.line||'')}</span></td></tr>`).join('')}</table>${rows.length>300?`<div class="tiny muted" style="padding:6px;">… 외 ${rows.length-300}줄</div>`:''}</div>
+      <div class="field mt12"><label>가져오기 메모 (이력에 남음)</label><input id="imp-note" placeholder="예: 7~10월 종이 기록지" value="${esc(IMP.fileName)}"></div>
+      <button class="btn btn-primary btn-full btn-lg" id="imp-save" onclick="impSave()" ${ok?'':'disabled'}>${ok}건 저장하기</button>
+      <div class="tiny muted mt8">저장되는 기록에는 "과거 입력" 표시가 붙고, 등록자는 ${esc(state.user.name)}(대표)로 남습니다. 직원 본인은 이 기록을 수정할 수 있습니다(사유 필수).</div></div>`;
+}
+async function impSave() {
+  const list = IMP.rows.filter(r => r.status==='ok'); if (!list.length) return;
+  const btn = document.getElementById('imp-save'); btn.disabled = true; btn.innerHTML = '<span class="spin"></span> 저장 중';
+  const batch = 'imp_' + Date.now().toString(36), note = (document.getElementById('imp-note')?.value||'').trim();
+  try {
+    const recs = list.map(r => { const base = { employeeId:r.emp.employeeId, employeeName:r.emp.name, date:r.date, month:r.date.slice(0,7), type:r.type, note:r.note||'', createdBy:state.user.employeeId, editCount:0, source:'import', importBatch:batch, importedBy:state.user.employeeId, nightMinutes:r.night||0 };
+      return r.type==='special' ? { ...base, startTime:r.startTime, endTime:r.endTime, breakMinutes:r.breakMinutes||0, specialMinutes:r.minutes } : { ...base, workEndTime:r.workEndTime, actualEndTime:r.actualEndTime, overtimeMinutes:r.minutes }; });
+    const ids = await DATA.addRecords(recs);
+    await DATA.addAudits(recs.map((rec,i) => ({ action:'import', recordId:ids[i], before:null, after:rec, reason:`과거 기록 가져오기${note?' · '+note:''}`, modifiedBy:state.user.employeeId, modifiedByName:state.user.name, modifiedByRole:state.user.role, targetEmployee:rec.employeeId, targetEmployeeName:rec.employeeName, targetDate:rec.date, importBatch:batch })));
+    await DATA.saveImportBatch(batch, { at:new Date().toISOString(), by:state.user.name, count:recs.length, note, months:[...new Set(recs.map(r=>r.month))].sort() });
+    closeSheet(); toast(`${recs.length}건을 넣었습니다`,'ok'); state.admTab='records'; state.admMonth = recs[recs.length-1].month; state.admEmp='all'; admTab('records');
+  } catch(e) { console.error(e); toast('저장 실패: '+e.message,'err'); btn.disabled=false; btn.textContent='다시 시도'; }
+}
+async function openImportHistory() {
+  if (state.user.role !== 'superadmin') { toast('대표만 할 수 있습니다','err'); return; }
+  openSheet(loadingHtml());
+  try { const list = await DATA.listImportBatches();
+    openSheet(`<div class="sheet-title">↩ 가져오기 내역</div><div class="sheet-sub">묶음을 취소하면 그때 넣은 기록이 전부 지워지고, 지운 내용은 이력에 남습니다. 직원이 그 뒤 수정한 기록도 함께 지워집니다.</div>
+      ${list.length?`<div class="list">${list.map(b=>`<div class="setrow"><div class="ico"></div><div class="lbl">${esc(b.note||b.id)}<small>${fmtDT(b.at)} · ${esc(b.by||'')} · ${b.count}건 · ${(b.months||[]).map(monthLabel).join(', ')}${b.undoneAt?` · <b style="color:var(--danger)">취소됨 ${fmtDT(b.undoneAt)}</b>`:''}</small></div>${b.undoneAt?'':`<button class="btn btn-danger-soft btn-xs" onclick="impUndo('${esc(b.id)}')">취소</button>`}</div>`).join('')}</div>`:`<div class="empty"><div class="ico"></div><p>가져온 묶음이 없습니다</p></div>`}
+      <div class="sheet-foot"><button class="btn btn-ghost" onclick="closeSheet()">닫기</button></div>`);
+  } catch(e) { openSheet(errorHtml(e, 'openImportHistory()')); }
+}
+function impUndo(batch) {
+  confirmDlg('↩','가져오기 취소','이 묶음으로 넣은 기록을 전부 지웁니다.\n지운 내용은 이력에 남습니다. 진행할까요?',[{label:'아니오'},{label:'전부 지우기',cls:'btn-danger',fn:async()=>{
+    try { const recs = await DATA.listRecordsByBatch(batch); if (!recs.length) { toast('지울 기록이 없습니다','warn'); }
+      else { await DATA.deleteRecords(recs.map(r=>r.id)); await DATA.addAudits(recs.map(r => ({ action:'import_undo', recordId:r.id, before:r, after:null, reason:'가져오기 묶음 취소', modifiedBy:state.user.employeeId, modifiedByName:state.user.name, modifiedByRole:state.user.role, targetEmployee:r.employeeId, targetEmployeeName:r.employeeName, targetDate:r.date, importBatch:batch }))); }
+      await DATA.saveImportBatch(batch, { undoneAt:new Date().toISOString() }); toast(`${recs.length}건 지움`,'ok'); openImportHistory(); }
+    catch(e) { toast('실패: '+e.message,'err'); } }}]);
+}
+// 데이터 정리: month 필드가 없는 예전 기록에 채워 넣기 (한 번만)
+function runMigrate() {
+  if (state.user.role !== 'superadmin') { toast('대표만 할 수 있습니다','err'); return; }
+  confirmDlg('','데이터 정리','모든 기록을 한 번 읽어 달(month) 표시가 없는 기록에 채웁니다.\n기록 내용(시간·메모)은 바뀌지 않습니다. 진행할까요?',[{label:'취소'},{label:'정리하기',cls:'btn-primary',fn:async()=>{
+    toast('정리 중…'); try { const all = await DATA.listAllRecords(); const need = all.filter(r => r.date && r.month !== r.date.slice(0,7)).map(r => [r.id, { month: r.date.slice(0,7) }]);
+      if (need.length) await DATA.updateRecords(need);
+      await DATA.saveSettings({ monthIndexed:true }); state.settings.monthIndexed = true;
+      await DATA.addAudit({ action:'migrate', recordId:'migrate', before:null, after:{ total:all.length, updated:need.length }, reason:`데이터 정리: ${need.length}건에 month 채움 (전체 ${all.length}건)`, modifiedBy:state.user.employeeId, modifiedByName:state.user.name, modifiedByRole:state.user.role, targetEmployee:'', targetEmployeeName:'', targetDate:'' });
+      toast(`정리 완료: ${need.length}건 채움 (전체 ${all.length}건)`,'ok'); renderAdm(); }
+    catch(e) { toast('실패: '+e.message,'err'); } }}]);
+}
+
+// ===== 시작 =====
+window.addEventListener('DOMContentLoaded', restoreSession);
+window.matchMedia('(prefers-color-scheme: dark)').addEventListener?.('change', () => { if (Pref.get('mode','light')==='auto') applyTheme(); });
+</script>
+</body>
+</html>
