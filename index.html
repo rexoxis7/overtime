@@ -375,7 +375,7 @@ details.grp .grp-body .list:last-child, details.grp .grp-body .card:last-child {
         <p id="login-sub">사번과 PIN으로 로그인하세요</p>
       </div>
       <div class="login-rem hidden" id="login-rem"><b id="login-rem-name"></b><a onclick="forgetLoginId()">다른 사번으로 로그인</a></div>
-      <div class="field" id="login-id-field"><label>사번</label><input id="login-id" placeholder="사번 입력" inputmode="numeric" autocomplete="username"></div>
+      <div class="field" id="login-id-field"><label>사번</label><input id="login-id" placeholder="사번 입력" inputmode="text" autocapitalize="off" autocorrect="off" autocomplete="username"></div>
       <div class="field"><label>PIN</label><input id="login-pin" type="password" placeholder="PIN 입력" inputmode="numeric" maxlength="8" autocomplete="current-password"></div>
       <button class="btn btn-primary btn-full btn-lg" id="login-btn" onclick="doLogin()">로그인</button>
       <div class="login-foot" id="login-foot">계정 문의는 대표님께</div>
@@ -440,7 +440,7 @@ details.grp .grp-body .list:last-child, details.grp .grp-body .card:last-child {
 // =====================================================================
 //  근무기록 v2 — 핵심 (상수·상태·유틸·계산·데이터 계층·인증·테마)
 // =====================================================================
-const APP_VER = 'v2.4.1 (2026-11)';
+const APP_VER = 'v2.4.2 (2026-11)';
 const DEMO = new URLSearchParams(location.search).get('demo') === '1';
 const SESSION_KEY = 'ot2_session';
 const SESSION_DAYS = 90;   // 직원 폰에서 90일마다 한 번만 다시 로그인 (2026-11-09, 전엔 30일)
@@ -1349,7 +1349,7 @@ async function copyInvite() { const ta = document.getElementById('inv-txt'); con
 function randomPin() { return String(Math.floor(1000 + Math.random()*9000)); }
 function openAddEmp() {
   openSheet(`<div class="sheet-title">직원 추가</div><div class="sheet-sub">추가하면 초대 문자가 바로 만들어집니다. 직원은 링크 → PIN → 홈 화면 추가로 끝.</div>
-    <div class="grid2"><div class="field"><label>이름</label><input id="ne-name" placeholder="홍길동"></div><div class="field"><label>사번 (숫자 권장)</label><input id="ne-id" placeholder="예: 1234" inputmode="numeric" autocomplete="off"></div></div>
+    <div class="grid2"><div class="field"><label>이름</label><input id="ne-name" placeholder="홍길동"></div><div class="field"><label>사번 (숫자 권장)</label><input id="ne-id" placeholder="예: 1234 (영문도 됨)" inputmode="text" autocapitalize="off" autocomplete="off"></div></div>
     <div class="grid2"><div class="field"><label>첫 PIN (4자리 이상 · 자동 생성됨)</label><input id="ne-pin" inputmode="numeric" value="${randomPin()}"></div><div class="field"><label>부서</label><input id="ne-dept" placeholder="시공팀"></div></div>
     <div class="field"><label>권한</label><select id="ne-role"><option value="employee">직원 (기록 입력)</option><option value="admin">관리자 (열람만)</option><option value="superadmin">대표 (열람·설정)</option></select></div>
     <div class="sheet-foot"><button class="btn btn-ghost" onclick="closeSheet()">취소</button><button class="btn btn-primary" id="ne-btn" onclick="submitAddEmp()">추가하고 초대 문자 만들기</button></div>`);
