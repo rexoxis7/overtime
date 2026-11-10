@@ -10,7 +10,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="근무기록">
 <link rel="apple-touch-icon" id="pwa-icon-link" href="">
-<link rel="manifest" id="pwa-manifest-link" href="">
+<link rel="manifest" id="pwa-manifest-link" href="manifest.json">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
 <script>
 // ===== 로드 즉시: 캐시된 로고·색으로 PWA 아이콘/스플래시 설정 (로그인 전에도 적용) =====
@@ -33,8 +33,7 @@
     }
     var ati = document.getElementById('pwa-icon-link'); if (ati) ati.href = iconUrl;
     var tc = document.querySelector('meta[name="theme-color"]'); if (tc) tc.content = splash;
-    var manifest = {name: localStorage.getItem('ot2_appname') || '근무기록', short_name: localStorage.getItem('ot2_appname') || '근무기록', start_url:'./', display:'standalone', background_color:splash, theme_color:splash, orientation:'portrait-primary', icons:[{src:iconUrl,sizes:'192x192',type:'image/png'},{src:iconUrl,sizes:'512x512',type:'image/png'}]};
-    var ml = document.getElementById('pwa-manifest-link'); if (ml) ml.href = URL.createObjectURL(new Blob([JSON.stringify(manifest)],{type:'application/manifest+json'}));
+    // 설치용 manifest는 같은 폴더의 manifest.json(고정 파일). 전엔 blob: 주소로 만들어 설치된 앱이 "열 수 없음"이 됐다(2026-11-10)
     // 개인 화면 모드(다크) 즉시 적용 — 깜빡임 방지
     var mode = localStorage.getItem('ot2_mode') || 'light';
     if (mode === 'dark' || (mode === 'auto' && window.matchMedia('(prefers-color-scheme: dark)').matches)) document.documentElement.setAttribute('data-theme','dark');
@@ -440,7 +439,7 @@ details.grp .grp-body .list:last-child, details.grp .grp-body .card:last-child {
 // =====================================================================
 //  근무기록 v2 — 핵심 (상수·상태·유틸·계산·데이터 계층·인증·테마)
 // =====================================================================
-const APP_VER = 'v2.4.2 (2026-11)';
+const APP_VER = 'v2.4.3 (2026-11)';
 const DEMO = new URLSearchParams(location.search).get('demo') === '1';
 const SESSION_KEY = 'ot2_session';
 const SESSION_DAYS = 90;   // 직원 폰에서 90일마다 한 번만 다시 로그인 (2026-11-09, 전엔 30일)
@@ -761,8 +760,7 @@ function injectPWA() {
   const s = state.settings, splash = s.splash || '#1E293B';
   const icon = s.logo || genIcon(splash); if (!icon) return;
   const ati = document.getElementById('pwa-icon-link'); if (ati) ati.href = icon;
-  const manifest = { name:s.appName||'근무기록', short_name:(s.appName||'근무기록').slice(0,12), start_url:'./', display:'standalone', background_color:splash, theme_color:splash, orientation:'portrait-primary', icons:[{src:icon,sizes:'192x192',type:'image/png'},{src:icon,sizes:'512x512',type:'image/png'}] };
-  const ml = document.getElementById('pwa-manifest-link'); if (ml) { if (ml._u) URL.revokeObjectURL(ml._u); ml._u = URL.createObjectURL(new Blob([JSON.stringify(manifest)],{type:'application/manifest+json'})); ml.href = ml._u; }
+  // manifest는 고정 파일 manifest.json (로고·앱 이름은 iOS 아이콘·상단 색에만 반영)
   const tc = document.querySelector('meta[name="theme-color"]'); if (tc) tc.content = splash;
 }
 function genIcon(color) {
@@ -1753,6 +1751,8 @@ function runMigrate() {
 
 // ===== 시작 =====
 window.addEventListener('DOMContentLoaded', restoreSession);
+// 홈 화면 설치용 서비스 워커(아무것도 저장하지 않음). file:// 로 열면 등록하지 않는다
+if ('serviceWorker' in navigator && /^https?:$/.test(location.protocol)) { window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {})); }
 window.matchMedia('(prefers-color-scheme: dark)').addEventListener?.('change', () => { if (Pref.get('mode','light')==='auto') applyTheme(); });
 </script>
 </body>
