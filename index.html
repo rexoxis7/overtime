@@ -9,7 +9,8 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="근무기록">
-<link rel="apple-touch-icon" id="pwa-icon-link" href="">
+<link rel="apple-touch-icon" id="pwa-icon-link" href="apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
 <link rel="manifest" id="pwa-manifest-link" href="manifest.json">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
 <script>
@@ -31,7 +32,7 @@
       x.fillText('근무', 256, 200); x.fillText('기록', 256, 330);
       iconUrl = cv.toDataURL('image/png');
     }
-    var ati = document.getElementById('pwa-icon-link'); if (ati) ati.href = iconUrl;
+    // 홈 화면 아이콘은 고정 파일 apple-touch-icon.png(검정 바탕 + 흰 STAGE 로고, 2026-11-10) — 여기서 바꾸지 않는다
     var tc = document.querySelector('meta[name="theme-color"]'); if (tc) tc.content = splash;
     // 설치용 manifest는 같은 폴더의 manifest.json(고정 파일). 전엔 blob: 주소로 만들어 설치된 앱이 "열 수 없음"이 됐다(2026-11-10)
     // 개인 화면 모드(다크) 즉시 적용 — 깜빡임 방지
@@ -439,7 +440,7 @@ details.grp .grp-body .list:last-child, details.grp .grp-body .card:last-child {
 // =====================================================================
 //  근무기록 v2 — 핵심 (상수·상태·유틸·계산·데이터 계층·인증·테마)
 // =====================================================================
-const APP_VER = 'v2.4.3 (2026-11)';
+const APP_VER = 'v2.4.4 (2026-11)';
 const DEMO = new URLSearchParams(location.search).get('demo') === '1';
 const SESSION_KEY = 'ot2_session';
 const SESSION_DAYS = 90;   // 직원 폰에서 90일마다 한 번만 다시 로그인 (2026-11-09, 전엔 30일)
@@ -758,8 +759,7 @@ function applyLogo(logo) {
 }
 function injectPWA() {
   const s = state.settings, splash = s.splash || '#1E293B';
-  const icon = s.logo || genIcon(splash); if (!icon) return;
-  const ati = document.getElementById('pwa-icon-link'); if (ati) ati.href = icon;
+  // 홈 화면 아이콘은 고정 파일(apple-touch-icon.png · manifest.json 아이콘)만 쓴다(2026-11-10)
   // manifest는 고정 파일 manifest.json (로고·앱 이름은 iOS 아이콘·상단 색에만 반영)
   const tc = document.querySelector('meta[name="theme-color"]'); if (tc) tc.content = splash;
 }
